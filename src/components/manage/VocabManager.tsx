@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { VocabUnit, VocabWord } from '../../types/vocab';
-import { Plus, Trash2, Download, Upload, ArrowLeft, FileText, Sparkles, BookPlus } from 'lucide-react';
+import { Plus, Trash2, Download, Upload, ArrowLeft, FileText, Sparkles, BookPlus, Lock } from 'lucide-react';
+import { hasParentPassword, removeParentPassword } from '../../services/auth';
 
 interface VocabManagerProps {
   units: VocabUnit[];
@@ -594,6 +595,41 @@ export const VocabManager: React.FC<VocabManagerProps> = ({
                 />
               </label>
             </div>
+          </div>
+
+          {/* Password Security Card */}
+          <div className="p-5 rounded-2xl border-2 border-slate-200 bg-slate-50/70 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center">
+                <Lock className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="font-extrabold text-slate-800 text-sm">
+                  {hasParentPassword() ? 'Eltern-Passwort ist aktiv 🔒' : 'Kein Passwort hinterlegt'}
+                </div>
+                <div className="text-xs text-slate-500">
+                  {hasParentPassword()
+                    ? 'Der Zahnradbereich ist vor Änderungen geschützt.'
+                    : 'Beim nächsten Klick auf das Zahnrad wird ein Passwort abgefragt.'}
+                </div>
+              </div>
+            </div>
+
+            {hasParentPassword() && (
+              <button
+                type="button"
+                onClick={() => {
+                  if (confirm('Möchtest du das Eltern-Passwort wirklich entfernen? Danach ist der Bereich ungeschützt.')) {
+                    removeParentPassword();
+                    alert('Passwort entfernt. Beim nächsten Öffnen kannst du ein neues festlegen.');
+                    window.location.reload();
+                  }
+                }}
+                className="px-3 py-2 bg-white border border-slate-300 hover:border-rose-400 hover:text-rose-600 text-slate-600 font-bold text-xs rounded-xl transition-colors"
+              >
+                Passwort zurücksetzen
+              </button>
+            )}
           </div>
 
           <div className="pt-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">

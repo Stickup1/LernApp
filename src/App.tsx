@@ -107,12 +107,16 @@ export const App: React.FC = () => {
 
   const allWordsPool: VocabWord[] = units.flatMap(u => u.words);
 
+  const handleSelectMode = (mode: LearningMode) => {
+    setCurrentMode(mode);
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col selection:bg-indigo-500 selection:text-white">
       <Navbar
         progress={progress}
         currentMode={currentMode}
-        onSelectMode={setCurrentMode}
+        onSelectMode={handleSelectMode}
         onToggleSound={handleToggleSound}
       />
 
@@ -123,7 +127,7 @@ export const App: React.FC = () => {
             selectedUnitId={selectedUnitId}
             onSelectUnit={setSelectedUnitId}
             progress={progress}
-            onStartMode={setCurrentMode}
+            onStartMode={handleSelectMode}
           />
         )}
 
@@ -189,7 +193,7 @@ export const App: React.FC = () => {
 
       {/* Footer */}
       <footer className="border-t border-slate-200 bg-white/70 py-4 text-center text-xs text-slate-400">
-        LernApp für 5. Klasse Mittelschule Bayern • Offline-fähig & Kostenlos
+        LernApp • Offline-fähig & Kostenlos
       </footer>
     </div>
   );

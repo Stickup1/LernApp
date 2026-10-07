@@ -34,9 +34,8 @@ export const Navbar: React.FC<NavbarProps> = ({
           <div>
             <div className="font-extrabold text-lg text-slate-800 leading-tight flex items-center gap-1.5">
               <span>LernHeld</span>
-              <span className="text-xs bg-indigo-100 text-indigo-700 font-bold px-1.5 py-0.5 rounded-full">5. Klasse</span>
             </div>
-            <div className="text-xs font-medium text-slate-500">Mittelschule Bayern</div>
+            <div className="text-xs font-medium text-slate-500">Englisch · Einstieg</div>
           </div>
         </button>
 

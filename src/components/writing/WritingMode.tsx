@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { VocabWord } from '../../types/vocab';
-import { ArrowLeft, Check, Sparkles, Volume2, HelpCircle, Eye } from 'lucide-react';
-import { speakEnglish } from '../../services/speech';
+import { ArrowLeft, Check, Sparkles, Volume2, HelpCircle, Eye, Mic, MicOff } from 'lucide-react';
+import { isPronunciationCheckSupported, speakEnglish, startPronunciationCheck } from '../../services/speech';
 import { playSound } from '../../services/audio';
 import { triggerConfetti } from '../../services/confetti';
 
@@ -26,19 +26,33 @@ export const WritingMode: React.FC<WritingModeProps> = ({
   const [feedback, setFeedback] = useState<'idle' | 'correct' | 'wrong'>('idle');
   const [hintLevel, setHintLevel] = useState(0); // 0 = none, 1 = first letter, 2 = first 2 letters
   const [finished, setFinished] = useState(false);
+  const [pronunciationFeedback, setPronunciationFeedback] = useState('');
+  const [isListening, setIsListening] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const stopListeningRef = useRef<(() => void) | null>(null);
 
   const currentWord = words[currentIndex];
 
   useEffect(() => {
+    stopListeningRef.current?.();
+    stopListeningRef.current = null;
     setInputVal('');
     setShowSolution(false);
     setFeedback('idle');
     setHintLevel(0);
+    setPronunciationFeedback('');
+    setIsListening(false);
     setTimeout(() => {
       inputRef.current?.focus();
     }, 150);
   }, [currentIndex]);
+
+  useEffect(() => {
+    return () => {
+      stopListeningRef.current?.();
+      stopListeningRef.current = null;
+    };
+  }, []);
 
   if (!currentWord) return null;
 
@@ -77,6 +91,40 @@ export const WritingMode: React.FC<WritingModeProps> = ({
 
   const handleShowHint = () => {
     setHintLevel(prev => Math.min(prev + 1, currentWord.en.length));
+  };
+
+  const handlePronunciationPractice = () => {
+    if (isListening) {
+      stopListeningRef.current?.();
+      stopListeningRef.current = null;
+      setIsListening(false);
+      return;
+    }
+
+    speakEnglish(currentWord.en);
+    if (!isPronunciationCheckSupported()) {
+      setPronunciationFeedback('Die Sprachaufnahme wird in diesem Browser nicht unterstützt.');
+      return;
+    }
+
+    setPronunciationFeedback('Bitte spreche das Wort laut nach...');
+    setIsListening(true);
+    stopListeningRef.current?.();
+    stopListeningRef.current = startPronunciationCheck(
+      currentWord.en,
+      ({ transcript, matches }) => {
+        setIsListening(false);
+        setPronunciationFeedback(
+          matches
+            ? `Sehr gut! Du hast "${currentWord.en}" richtig gesprochen.`
+            : `Fast! Du hast "${transcript || 'das Wort'}" gesagt. Versuch es noch einmal mit "${currentWord.en}".`
+        );
+      },
+      () => {
+        setIsListening(false);
+        setPronunciationFeedback('Bitte noch einmal deutlich sprechen.');
+      },
+    );
   };
 
   if (finished) {
@@ -186,6 +234,30 @@ export const WritingMode: React.FC<WritingModeProps> = ({
         )}
 
         {/* Action Buttons */}
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              speakEnglish(currentWord.en);
+              setPronunciationFeedback(`Hör zu: "${currentWord.en}"`);
+            }}
+            className="flex-1 min-w-[150px] py-3 bg-sky-100 hover:bg-sky-200 text-sky-800 font-bold rounded-2xl flex items-center justify-center gap-2"
+          >
+            <Volume2 className="w-4 h-4" /> Aussprache hören
+          </button>
+
+          {isPronunciationCheckSupported() && (
+            <button
+              type="button"
+              onClick={handlePronunciationPractice}
+              className="flex-1 min-w-[150px] py-3 bg-violet-100 hover:bg-violet-200 text-violet-800 font-bold rounded-2xl flex items-center justify-center gap-2"
+            >
+              {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+              {isListening ? 'Stoppen' : 'Aussprache üben'}
+            </button>
+          )}
+        </div>
+
         <div className="flex gap-2">
           <button
             type="submit"
@@ -196,6 +268,12 @@ export const WritingMode: React.FC<WritingModeProps> = ({
           </button>
         </div>
       </form>
+
+      {pronunciationFeedback && (
+        <div className="p-3 rounded-2xl border border-violet-200 bg-violet-50 text-sm font-bold text-violet-800">
+          {pronunciationFeedback}
+        </div>
+      )}
 
       {/* Helpful Actions */}
       <div className="flex items-center justify-between text-xs font-bold text-slate-500 pt-2">

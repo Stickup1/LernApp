@@ -1,6 +1,6 @@
-# ⚡ LernHeld 5. Klasse (Mittelschule Bayern)
+# ⚡ LernHeld
 
-Eine maßgeschneiderte Lern-App für Schüler der 5. Klasse Mittelschule (Bayern) mit Fokus auf **Englisch-Vokabeltraining** und **Gamification**. 
+Eine maßgeschneiderte Lern-App für **Englisch-Vokabeltraining** und Gamification mit Fokus auf klaren Übungen, leichten Tipps und direkter Aussprachepraxis.
 
 Läuft 100% statisch im Browser, werbefrei, offline-fähig und optimiert für **GitHub Pages** (Smartphone, Tablet/iPad und PC).
 
@@ -19,7 +19,7 @@ Läuft 100% statisch im Browser, werbefrei, offline-fähig und optimiert für **
   5. 👾 **Monster-Bosskampf:** Besiege Vokabel-Monster mit richtigen Antworten (Gamification).
 
 ### 2. Vokabeln einpflegen & verwalten
-- **Vorbereiteter Lehrplan-Wortschatz (Bayern 5. Klasse):**
+- **Vorbereiteter Wortschatz für den Englischunterricht:**
   - Unit 1: *Back to School* (Schulsachen & Klassenzimmer)
   - Unit 2: *Family & Friends* (Familie & Freunde)
   - Unit 3: *Pets & Animals* (Haustiere & Tiere)

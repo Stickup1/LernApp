@@ -44,13 +44,13 @@ export const Dashboard: React.FC<DashboardProps> = ({
           <div className="space-y-2">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/15 backdrop-blur-sm text-xs font-bold text-indigo-100">
               <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-              <span>Englisch 5. Klasse • Mittelschule Bayern</span>
+              <span>Englisch-Training</span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-black tracking-tight">
-              Hallo Lernheld! Bereit für die nächste Mission? 🚀
+              Hallo Lernheld! Ready für die nächste Mission? 🚀
             </h1>
             <p className="text-indigo-100 text-sm max-w-md">
-              Meistere deine Vokabeln mit dem 5-Fächer-System und besiege das Vokabel-Monster im Bosskampf!
+              Übe Vokabeln, hör dir die Aussprache an und besiege das Vokabel-Monster im Bosskampf!
             </p>
           </div>
 
