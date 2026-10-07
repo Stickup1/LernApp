@@ -34,6 +34,17 @@ export interface UserProgress {
   voiceAccent: EnglishAccent;
 }
 
+export type ProfileAccent = 'indigo' | 'amber' | 'emerald' | 'rose' | 'sky' | 'violet';
+
+export interface LearnerProfile {
+  id: string;
+  name: string;
+  avatar?: string;
+  accentColor?: ProfileAccent;
+  progress: UserProgress;
+  units: VocabUnit[];
+}
+
 export type LearningMode = 
   | 'dashboard'
   | 'flashcards'

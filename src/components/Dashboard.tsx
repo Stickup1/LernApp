@@ -1,12 +1,16 @@
 import React from 'react';
-import { VocabUnit, UserProgress, LearningMode } from '../types/vocab';
-import { Sparkles, Swords, PlusCircle } from 'lucide-react';
+import { VocabUnit, UserProgress, LearningMode, LearnerProfile } from '../types/vocab';
+import { Sparkles, Swords, PlusCircle, UserPlus, Trophy, Flame, BookOpen } from 'lucide-react';
 
 interface DashboardProps {
   units: VocabUnit[];
   selectedUnitId: string;
   onSelectUnit: (unitId: string) => void;
   progress: UserProgress;
+  profiles?: LearnerProfile[];
+  activeProfileId?: string;
+  onSelectProfile?: (profileId: string) => void;
+  onCreateProfile?: () => void;
   onStartMode: (mode: LearningMode) => void;
 }
 
@@ -15,6 +19,10 @@ export const Dashboard: React.FC<DashboardProps> = ({
   selectedUnitId,
   onSelectUnit,
   progress,
+  profiles = [],
+  activeProfileId,
+  onSelectProfile,
+  onCreateProfile,
   onStartMode,
 }) => {
   const currentUnit = units.find(u => u.id === selectedUnitId) || units[0];
@@ -38,6 +46,36 @@ export const Dashboard: React.FC<DashboardProps> = ({
   const nextMilestoneText = progress.wordsPracticedToday >= todayGoal
     ? 'Tagesziel erreicht!'
     : `${Math.max(0, todayGoal - progress.wordsPracticedToday)} Wörter bis zum Tagesziel`;
+
+  const profilePalettes = {
+    indigo: { card: 'linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%)', badge: '#eef2ff', badgeText: '#312e81', accent: '#4f46e5' },
+    amber: { card: 'linear-gradient(135deg, #fff7ed 0%, #fef3c7 100%)', badge: '#fffbeb', badgeText: '#92400e', accent: '#f59e0b' },
+    emerald: { card: 'linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%)', badge: '#ecfdf5', badgeText: '#065f46', accent: '#10b981' },
+    rose: { card: 'linear-gradient(135deg, #fff1f2 0%, #ffe4e6 100%)', badge: '#fff1f2', badgeText: '#9f1239', accent: '#f43f5e' },
+    sky: { card: 'linear-gradient(135deg, #f0f9ff 0%, #dbeafe 100%)', badge: '#f0f9ff', badgeText: '#0f766e', accent: '#0ea5e9' },
+    violet: { card: 'linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%)', badge: '#f5f3ff', badgeText: '#5b21b6', accent: '#8b5cf6' },
+  } as const;
+
+  const familyStats = profiles.map(profile => {
+    const profileWords = profile.units.flatMap(unit => unit.words);
+    const mastery = profileWords.length > 0
+      ? Math.round((profileWords.filter(word => (word.box || 1) >= 5).length / profileWords.length) * 100)
+      : 0;
+
+    return {
+      ...profile,
+      totalWords: profileWords.length,
+      mastery,
+      streak: profile.progress.streakDays,
+      xp: profile.progress.xp,
+      monsters: profile.progress.monsterDefeatedCount,
+      palette: profilePalettes[profile.accentColor ?? 'indigo'],
+    };
+  });
+
+  const totalFamilyXp = familyStats.reduce((sum, profile) => sum + profile.xp, 0);
+  const totalFamilyWords = familyStats.reduce((sum, profile) => sum + profile.totalWords, 0);
+  const bestStreak = familyStats.reduce((max, profile) => Math.max(max, profile.streak), 0);
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-6 space-y-8">
@@ -124,6 +162,130 @@ export const Dashboard: React.FC<DashboardProps> = ({
           </div>
         </div>
       </div>
+
+      {profiles.length > 0 && (
+        <section className="space-y-4">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <h2 className="text-lg font-black text-slate-800 flex items-center gap-2">
+                <span>👨‍👩‍👧‍👦</span>
+                <span>Familien-Übersicht</span>
+              </h2>
+              <p className="text-sm text-slate-500">Wichtige Kennzahlen für die Eltern</p>
+            </div>
+
+            {onCreateProfile && (
+              <button
+                onClick={onCreateProfile}
+                className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 text-sm font-bold shadow-sm transition-colors"
+              >
+                <UserPlus className="w-4 h-4" />
+                <span>Profil hinzufügen</span>
+              </button>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+            <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
+              <div className="flex items-center gap-2 text-slate-500 text-xs font-bold uppercase tracking-wide">
+                <UserPlus className="w-4 h-4 text-indigo-600" />
+                <span>Profile</span>
+              </div>
+              <div className="mt-3 text-3xl font-black text-slate-800">{familyStats.length}</div>
+            </div>
+
+            <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
+              <div className="flex items-center gap-2 text-slate-500 text-xs font-bold uppercase tracking-wide">
+                <Trophy className="w-4 h-4 text-amber-600" />
+                <span>Gesamt XP</span>
+              </div>
+              <div className="mt-3 text-3xl font-black text-slate-800">{totalFamilyXp}</div>
+            </div>
+
+            <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
+              <div className="flex items-center gap-2 text-slate-500 text-xs font-bold uppercase tracking-wide">
+                <Flame className="w-4 h-4 text-orange-500" />
+                <span>Best Streak</span>
+              </div>
+              <div className="mt-3 text-3xl font-black text-slate-800">{bestStreak} Tage</div>
+            </div>
+
+            <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
+              <div className="flex items-center gap-2 text-slate-500 text-xs font-bold uppercase tracking-wide">
+                <BookOpen className="w-4 h-4 text-emerald-600" />
+                <span>Wörter</span>
+              </div>
+              <div className="mt-3 text-3xl font-black text-slate-800">{totalFamilyWords}</div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+            {familyStats.map(profile => (
+              <button
+                key={profile.id}
+                onClick={() => onSelectProfile?.(profile.id)}
+                className="text-left rounded-3xl border p-4 transition-all hover:-translate-y-0.5 hover:shadow-md"
+                style={{
+                  borderColor: activeProfileId === profile.id ? profile.palette.accent : '#e2e8f0',
+                  background: profile.palette.card,
+                  boxShadow: activeProfileId === profile.id ? `0 0 0 2px ${profile.palette.accent}22` : 'none',
+                }}
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div
+                      className="w-12 h-12 rounded-2xl flex items-center justify-center text-xl font-black shadow-md"
+                      style={{
+                        background: `linear-gradient(135deg, ${profile.palette.accent} 0%, #ffffff 100%)`,
+                        color: '#ffffff',
+                      }}
+                    >
+                      {profile.avatar || '⭐'}
+                    </div>
+                    <div>
+                      <div className="font-black text-slate-800">{profile.name}</div>
+                      <div className="text-xs text-slate-500">Level {profile.progress.level}</div>
+                    </div>
+                  </div>
+
+                  <div className="text-right">
+                    <div className="text-xs font-bold" style={{ color: profile.palette.badgeText }}>{profile.xp} XP</div>
+                    <div className="text-xs text-slate-500">{profile.mastery}%</div>
+                  </div>
+                </div>
+
+                <div className="mt-4 flex items-center justify-between gap-2">
+                  <span
+                    className="inline-flex items-center rounded-full px-2 py-1 text-[10px] font-black uppercase tracking-[0.12em]"
+                    style={{ background: profile.palette.badge, color: profile.palette.badgeText }}
+                  >
+                    {activeProfileId === profile.id ? 'Aktiv' : 'Profil'}
+                  </span>
+
+                  <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500">
+                    {profile.mastery}% Meisterlevel
+                  </span>
+                </div>
+
+                <div className="mt-4 grid grid-cols-3 gap-2 text-center text-xs font-bold text-slate-600">
+                  <div className="bg-white/70 rounded-xl px-2 py-2 border border-white/60">
+                    <div className="text-slate-500">Streak</div>
+                    <div className="text-base font-black text-slate-800">{profile.streak}</div>
+                  </div>
+                  <div className="bg-white/70 rounded-xl px-2 py-2 border border-white/60">
+                    <div className="text-slate-500">Wörter</div>
+                    <div className="text-base font-black text-slate-800">{profile.totalWords}</div>
+                  </div>
+                  <div className="bg-white/70 rounded-xl px-2 py-2 border border-white/60">
+                    <div className="text-slate-500">Monster</div>
+                    <div className="text-base font-black text-slate-800">{profile.monsters}</div>
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Unit Selector & Modes or Empty State */}
       {units.length === 0 ? (

@@ -1,10 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { VocabUnit, UserProgress, LearningMode, VocabWord, EnglishAccent } from './types/vocab';
+import { VocabUnit, UserProgress, LearningMode, VocabWord, EnglishAccent, LearnerProfile } from './types/vocab';
 import {
+  getStoredProfiles,
+  saveStoredProfiles,
+  createProfile,
   getStoredUnits,
   saveStoredUnits,
   getStoredProgress,
   saveStoredProgress,
+  INITIAL_PROGRESS,
 } from './services/storage';
 import { Navbar } from './components/Navbar';
 import { Dashboard } from './components/Dashboard';
@@ -18,22 +22,37 @@ import { playSound } from './services/audio';
 import { triggerConfetti } from './services/confetti';
 
 export const App: React.FC = () => {
-  const [units, setUnits] = useState<VocabUnit[]>([]);
+  const initialProfiles = getStoredProfiles();
+  const [profiles, setProfiles] = useState<LearnerProfile[]>(initialProfiles);
+  const [activeProfileId, setActiveProfileId] = useState<string>(initialProfiles[0]?.id ?? createProfile('Lernheld').id);
   const [selectedUnitId, setSelectedUnitId] = useState<string>('all');
   const [currentMode, setCurrentMode] = useState<LearningMode>('dashboard');
-  const [progress, setProgress] = useState<UserProgress>(getStoredProgress);
   const importInputRef = useRef<HTMLInputElement | null>(null);
 
-  // Initialize units from storage
-  useEffect(() => {
-    const loadedUnits = getStoredUnits();
-    setUnits(loadedUnits);
-    if (loadedUnits.length > 0 && selectedUnitId !== 'all') {
-      setSelectedUnitId(loadedUnits[0].id);
-    }
-  }, []);
+  const activeProfile = profiles.find(profile => profile.id === activeProfileId) ?? profiles[0];
+  const [units, setUnits] = useState<VocabUnit[]>(() => activeProfile?.units ?? getStoredUnits());
+  const [progress, setProgress] = useState<UserProgress>(() => activeProfile?.progress ?? getStoredProgress());
 
-  // Save progress changes
+  useEffect(() => {
+    if (!activeProfile) return;
+    setUnits(activeProfile.units);
+    setProgress(activeProfile.progress);
+    setSelectedUnitId('all');
+  }, [activeProfileId]);
+
+  useEffect(() => {
+    if (!activeProfileId || profiles.length === 0) return;
+    setProfiles(prevProfiles =>
+      prevProfiles.map(profile =>
+        profile.id === activeProfileId ? { ...profile, units, progress } : profile
+      )
+    );
+  }, [units, progress, activeProfileId]);
+
+  useEffect(() => {
+    saveStoredProfiles(profiles);
+  }, [profiles]);
+
   useEffect(() => {
     saveStoredProgress(progress);
   }, [progress]);
@@ -90,6 +109,13 @@ export const App: React.FC = () => {
           return w;
         }),
       }));
+
+      setProfiles(prevProfiles =>
+        prevProfiles.map(profile =>
+          profile.id === activeProfileId ? { ...profile, units: updated } : profile
+        )
+      );
+
       saveStoredUnits(updated);
       return updated;
     });
@@ -97,6 +123,11 @@ export const App: React.FC = () => {
 
   const handleSaveUnits = (newUnits: VocabUnit[]) => {
     setUnits(newUnits);
+    setProfiles(prevProfiles =>
+      prevProfiles.map(profile =>
+        profile.id === activeProfileId ? { ...profile, units: newUnits } : profile
+      )
+    );
     saveStoredUnits(newUnits);
   };
 
@@ -107,12 +138,51 @@ export const App: React.FC = () => {
     }));
   };
 
+  const handleCreateProfile = () => {
+    const nextName = window.prompt('Name des neuen Lernprofils:', 'Neues Profil');
+    if (!nextName) return;
+
+    const avatarOptions = ['🚀', '🦊', '🐼', '🤖', '🦁', '🐸', '🌟', '🎯'];
+    const accentOptions = ['indigo', 'amber', 'emerald', 'rose', 'sky', 'violet'];
+
+    const avatarInput = window.prompt(
+      `Avatar für ${nextName} wählen:\n${avatarOptions.join(' ')}\nLeer lassen = zufällig`,
+      avatarOptions[0]
+    );
+
+    const accentInput = window.prompt(
+      `Farbe für ${nextName} wählen:\n${accentOptions.join(', ')}\nLeer lassen = zufällig`,
+      'indigo'
+    );
+
+    const selectedAvatar = avatarInput && avatarOptions.includes(avatarInput) ? avatarInput : undefined;
+    const normalizedAccent = accentInput?.trim().toLowerCase();
+    const selectedAccent = normalizedAccent && accentOptions.includes(normalizedAccent)
+      ? normalizedAccent as 'indigo' | 'amber' | 'emerald' | 'rose' | 'sky' | 'violet'
+      : undefined;
+
+    const newProfile = createProfile(
+      nextName,
+      getStoredUnits(),
+      { ...INITIAL_PROGRESS },
+      selectedAvatar,
+      selectedAccent
+    );
+    setProfiles(prev => [...prev, newProfile]);
+    setActiveProfileId(newProfile.id);
+    setCurrentMode('dashboard');
+  };
+
+  const handleSelectProfile = (profileId: string) => {
+    setActiveProfileId(profileId);
+    setCurrentMode('dashboard');
+  };
+
   const handleExportData = () => {
     const payload = {
       version: 1,
       exportedAt: new Date().toISOString(),
-      progress,
-      units,
+      profiles,
     };
 
     const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
@@ -137,12 +207,14 @@ export const App: React.FC = () => {
       try {
         const parsed = JSON.parse(String(reader.result || '{}'));
 
-        if (Array.isArray(parsed.units)) {
-          setUnits(parsed.units);
-          saveStoredUnits(parsed.units);
-        }
-
-        if (parsed.progress && typeof parsed.progress === 'object') {
+        if (Array.isArray(parsed.profiles) && parsed.profiles.length > 0) {
+          setProfiles(parsed.profiles);
+          setActiveProfileId(parsed.profiles[0].id);
+        } else if (Array.isArray(parsed.units)) {
+          const importedProfile = createProfile('Importiert', parsed.units, { ...INITIAL_PROGRESS, ...parsed.progress });
+          setProfiles(prev => [...prev, importedProfile]);
+          setActiveProfileId(importedProfile.id);
+        } else if (parsed.progress && typeof parsed.progress === 'object') {
           const mergedProgress = { ...getStoredProgress(), ...parsed.progress };
           setProgress(mergedProgress);
           saveStoredProgress(mergedProgress);
@@ -186,9 +258,13 @@ export const App: React.FC = () => {
       <Navbar
         progress={progress}
         currentMode={currentMode}
+        profiles={profiles}
+        activeProfileId={activeProfileId}
         onSelectMode={handleSelectMode}
         onToggleSound={handleToggleSound}
         onChangeVoiceAccent={handleChangeVoiceAccent}
+        onSelectProfile={handleSelectProfile}
+        onCreateProfile={handleCreateProfile}
         onExportData={handleExportData}
         onImportData={handleImportData}
       />
@@ -200,6 +276,10 @@ export const App: React.FC = () => {
             selectedUnitId={selectedUnitId}
             onSelectUnit={setSelectedUnitId}
             progress={progress}
+            profiles={profiles}
+            activeProfileId={activeProfileId}
+            onSelectProfile={handleSelectProfile}
+            onCreateProfile={handleCreateProfile}
             onStartMode={handleSelectMode}
           />
         )}
