@@ -1,5 +1,5 @@
 import React from 'react';
-import { UserProgress, LearningMode } from '../types/vocab';
+import { UserProgress, LearningMode, EnglishAccent } from '../types/vocab';
 import { getXpForNextLevel } from '../services/storage';
 import { Flame, Volume2, VolumeX, Sparkles, Home, Settings } from 'lucide-react';
 
@@ -8,6 +8,7 @@ interface NavbarProps {
   currentMode: LearningMode;
   onSelectMode: (mode: LearningMode) => void;
   onToggleSound: () => void;
+  onChangeVoiceAccent: (accent: EnglishAccent) => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -15,6 +16,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   currentMode,
   onSelectMode,
   onToggleSound,
+  onChangeVoiceAccent,
 }) => {
   const xpNeeded = getXpForNextLevel(progress.level);
   const xpCurrentLevel = progress.xp % xpNeeded;
@@ -66,7 +68,20 @@ export const Navbar: React.FC<NavbarProps> = ({
           </div>
 
           {/* Nav Actions */}
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-2">
+            <label className="hidden sm:flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-2 py-1.5 text-[11px] font-bold text-slate-600">
+              <span>Voice</span>
+              <select
+                value={progress.voiceAccent}
+                onChange={e => onChangeVoiceAccent(e.target.value as EnglishAccent)}
+                className="bg-transparent font-bold text-slate-700 outline-none"
+                aria-label="Aussprache-Auswahl"
+              >
+                <option value="en-GB">UK</option>
+                <option value="en-US">US</option>
+              </select>
+            </label>
+
             <button
               onClick={() => onSelectMode('dashboard')}
               title="Zurück zur Übersicht"

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { VocabWord } from '../../types/vocab';
+import { EnglishAccent, VocabWord } from '../../types/vocab';
 import { ArrowLeft, RotateCcw, Volume2, Sparkles } from 'lucide-react';
 import { speakEnglish } from '../../services/speech';
 import { playSound } from '../../services/audio';
@@ -8,6 +8,7 @@ import { triggerConfetti } from '../../services/confetti';
 interface ScrambleModeProps {
   words: VocabWord[];
   soundEnabled: boolean;
+  voiceAccent: EnglishAccent;
   onUpdateWordBox: (wordId: string, newBox: number, isCorrect: boolean) => void;
   onAddXp: (amount: number) => void;
   onExit: () => void;
@@ -22,6 +23,7 @@ interface LetterTile {
 export const ScrambleMode: React.FC<ScrambleModeProps> = ({
   words,
   soundEnabled,
+  voiceAccent,
   onUpdateWordBox,
   onAddXp,
   onExit,
@@ -70,7 +72,7 @@ export const ScrambleMode: React.FC<ScrambleModeProps> = ({
     if (constructed === targetWord) {
       setIsSuccess(true);
       playSound('correct', soundEnabled);
-      speakEnglish(currentWord.en);
+      speakEnglish(currentWord.en, 0.9, voiceAccent);
       onAddXp(15);
       onUpdateWordBox(currentWord.id, Math.min(5, (currentWord.box || 1) + 1), true);
 
@@ -216,7 +218,7 @@ export const ScrambleMode: React.FC<ScrambleModeProps> = ({
         </button>
 
         <button
-          onClick={() => speakEnglish(currentWord.en)}
+          onClick={() => speakEnglish(currentWord.en, 0.9, voiceAccent)}
           className="px-4 py-2.5 rounded-xl bg-indigo-50 text-indigo-700 hover:bg-indigo-100 font-bold text-xs flex items-center gap-1.5 transition-colors"
         >
           <Volume2 className="w-3.5 h-3.5" /> Aussprache anhören

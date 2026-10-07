@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { VocabWord } from '../../types/vocab';
+import { EnglishAccent, VocabWord } from '../../types/vocab';
 import { ArrowLeft, Check, Sparkles, Volume2, HelpCircle, Eye, Mic, MicOff } from 'lucide-react';
 import { isPronunciationCheckSupported, speakEnglish, startPronunciationCheck } from '../../services/speech';
 import { playSound } from '../../services/audio';
@@ -8,6 +8,7 @@ import { triggerConfetti } from '../../services/confetti';
 interface WritingModeProps {
   words: VocabWord[];
   soundEnabled: boolean;
+  voiceAccent: EnglishAccent;
   onUpdateWordBox: (wordId: string, newBox: number, isCorrect: boolean) => void;
   onAddXp: (amount: number) => void;
   onExit: () => void;
@@ -16,6 +17,7 @@ interface WritingModeProps {
 export const WritingMode: React.FC<WritingModeProps> = ({
   words,
   soundEnabled,
+  voiceAccent,
   onUpdateWordBox,
   onAddXp,
   onExit,
@@ -68,7 +70,7 @@ export const WritingMode: React.FC<WritingModeProps> = ({
     if (userClean === targetClean) {
       setFeedback('correct');
       playSound('correct', soundEnabled);
-      speakEnglish(currentWord.en);
+      speakEnglish(currentWord.en, 0.9, voiceAccent);
       const earnedXp = hintLevel > 0 ? 10 : 20;
       onAddXp(earnedXp);
       onUpdateWordBox(currentWord.id, Math.min(5, (currentWord.box || 1) + 1), true);
@@ -101,7 +103,7 @@ export const WritingMode: React.FC<WritingModeProps> = ({
       return;
     }
 
-    speakEnglish(currentWord.en);
+    speakEnglish(currentWord.en, 0.9, voiceAccent);
     if (!isPronunciationCheckSupported()) {
       setPronunciationFeedback('Die Sprachaufnahme wird in diesem Browser nicht unterstützt.');
       return;
@@ -124,6 +126,7 @@ export const WritingMode: React.FC<WritingModeProps> = ({
         setIsListening(false);
         setPronunciationFeedback('Bitte noch einmal deutlich sprechen.');
       },
+      voiceAccent,
     );
   };
 
@@ -225,7 +228,7 @@ export const WritingMode: React.FC<WritingModeProps> = ({
             <span>Richtige Lösung: <strong>{currentWord.en}</strong></span>
             <button
               type="button"
-              onClick={() => speakEnglish(currentWord.en)}
+              onClick={() => speakEnglish(currentWord.en, 0.9, voiceAccent)}
               className="p-1 hover:bg-indigo-100 rounded-full"
             >
               <Volume2 className="w-4 h-4 text-indigo-600" />
@@ -238,7 +241,7 @@ export const WritingMode: React.FC<WritingModeProps> = ({
           <button
             type="button"
             onClick={() => {
-              speakEnglish(currentWord.en);
+              speakEnglish(currentWord.en, 0.9, voiceAccent);
               setPronunciationFeedback(`Hör zu: "${currentWord.en}"`);
             }}
             className="flex-1 min-w-[150px] py-3 bg-sky-100 hover:bg-sky-200 text-sky-800 font-bold rounded-2xl flex items-center justify-center gap-2"
@@ -289,7 +292,7 @@ export const WritingMode: React.FC<WritingModeProps> = ({
           type="button"
           onClick={() => {
             setShowSolution(true);
-            speakEnglish(currentWord.en);
+            speakEnglish(currentWord.en, 0.9, voiceAccent);
           }}
           className="flex items-center gap-1.5 hover:text-indigo-600 transition-colors"
         >

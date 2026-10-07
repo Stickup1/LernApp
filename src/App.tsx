@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { VocabUnit, UserProgress, LearningMode, VocabWord } from './types/vocab';
+import { VocabUnit, UserProgress, LearningMode, VocabWord, EnglishAccent } from './types/vocab';
 import {
   getStoredUnits,
   saveStoredUnits,
@@ -65,6 +65,13 @@ export const App: React.FC = () => {
     }));
   };
 
+  const handleChangeVoiceAccent = (voiceAccent: EnglishAccent) => {
+    setProgress(prev => ({
+      ...prev,
+      voiceAccent,
+    }));
+  };
+
   const handleUpdateWordBox = (wordId: string, newBox: number, isCorrect: boolean) => {
     setUnits(prevUnits => {
       const updated = prevUnits.map(unit => ({
@@ -118,6 +125,7 @@ export const App: React.FC = () => {
         currentMode={currentMode}
         onSelectMode={handleSelectMode}
         onToggleSound={handleToggleSound}
+        onChangeVoiceAccent={handleChangeVoiceAccent}
       />
 
       <main className="flex-1 pb-16">
@@ -135,6 +143,7 @@ export const App: React.FC = () => {
           <FlashcardMode
             words={activeWords}
             soundEnabled={progress.soundEnabled}
+            voiceAccent={progress.voiceAccent}
             onUpdateWordBox={handleUpdateWordBox}
             onAddXp={handleAddXp}
             onExit={() => setCurrentMode('dashboard')}
@@ -146,6 +155,7 @@ export const App: React.FC = () => {
             words={activeWords}
             allWordsPool={allWordsPool}
             soundEnabled={progress.soundEnabled}
+            voiceAccent={progress.voiceAccent}
             onUpdateWordBox={handleUpdateWordBox}
             onAddXp={handleAddXp}
             onExit={() => setCurrentMode('dashboard')}
@@ -156,6 +166,7 @@ export const App: React.FC = () => {
           <ScrambleMode
             words={activeWords}
             soundEnabled={progress.soundEnabled}
+            voiceAccent={progress.voiceAccent}
             onUpdateWordBox={handleUpdateWordBox}
             onAddXp={handleAddXp}
             onExit={() => setCurrentMode('dashboard')}
@@ -166,6 +177,7 @@ export const App: React.FC = () => {
           <WritingMode
             words={activeWords}
             soundEnabled={progress.soundEnabled}
+            voiceAccent={progress.voiceAccent}
             onUpdateWordBox={handleUpdateWordBox}
             onAddXp={handleAddXp}
             onExit={() => setCurrentMode('dashboard')}
@@ -176,6 +188,7 @@ export const App: React.FC = () => {
           <MonsterQuest
             words={activeWords.length > 3 ? activeWords : allWordsPool}
             soundEnabled={progress.soundEnabled}
+            voiceAccent={progress.voiceAccent}
             onMonsterDefeated={handleMonsterDefeated}
             onAddXp={handleAddXp}
             onExit={() => setCurrentMode('dashboard')}

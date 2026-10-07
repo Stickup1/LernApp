@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { VocabWord } from '../../types/vocab';
+import { EnglishAccent, VocabWord } from '../../types/vocab';
 import { Volume2, ArrowLeft, Flame, Sparkles, CheckCircle2, XCircle } from 'lucide-react';
 import { speakEnglish } from '../../services/speech';
 import { playSound } from '../../services/audio';
@@ -9,6 +9,7 @@ interface QuizModeProps {
   words: VocabWord[];
   allWordsPool: VocabWord[];
   soundEnabled: boolean;
+  voiceAccent: EnglishAccent;
   onUpdateWordBox: (wordId: string, newBox: number, isCorrect: boolean) => void;
   onAddXp: (amount: number) => void;
   onExit: () => void;
@@ -18,6 +19,7 @@ export const QuizMode: React.FC<QuizModeProps> = ({
   words,
   allWordsPool,
   soundEnabled,
+  voiceAccent,
   onUpdateWordBox,
   onAddXp,
   onExit,
@@ -40,9 +42,9 @@ export const QuizMode: React.FC<QuizModeProps> = ({
   // Auto-speak English word on new question
   useEffect(() => {
     if (currentWord) {
-      speakEnglish(currentWord.en);
+      speakEnglish(currentWord.en, 0.9, voiceAccent);
     }
-  }, [currentIndex, currentWord]);
+  }, [currentIndex, currentWord, voiceAccent]);
 
   // Generate 4 options: 1 correct + 3 random distractors
   const options = useMemo(() => {
@@ -168,7 +170,7 @@ export const QuizMode: React.FC<QuizModeProps> = ({
           {currentWord.en}
         </div>
         <button
-          onClick={() => speakEnglish(currentWord.en)}
+          onClick={() => speakEnglish(currentWord.en, 0.9, voiceAccent)}
           className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-full transition-colors"
         >
           <Volume2 className="w-4 h-4" /> Aussprache wiederholen

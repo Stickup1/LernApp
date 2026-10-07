@@ -13,6 +13,7 @@ export const INITIAL_PROGRESS: UserProgress = {
   monsterDefeatedCount: 0,
   soundEnabled: true,
   ttsSpeed: 0.9,
+  voiceAccent: 'en-GB',
 };
 
 export const getStoredUnits = (): VocabUnit[] => {

@@ -20,6 +20,8 @@ declare global {
 const normalizeSpeechText = (value: string) =>
   value.trim().toLowerCase().replace(/[^a-z]/g, '');
 
+const formatAccent = (accent: string) => accent.toLowerCase().replace('_', '-');
+
 export const isPronunciationCheckSupported = (): boolean => {
   if (typeof window === 'undefined') return false;
   return 'SpeechRecognition' in window || 'webkitSpeechRecognition' in window;
@@ -29,6 +31,7 @@ export const startPronunciationCheck = (
   expectedText: string,
   onResult: (result: { transcript: string; matches: boolean }) => void,
   onError?: (message: string) => void,
+  accent: string = 'en-GB',
 ): (() => void) => {
   if (typeof window === 'undefined' || !isPronunciationCheckSupported()) {
     onError?.('Dieses Gerät kann die Spracherkennung nicht nutzen.');
@@ -38,7 +41,7 @@ export const startPronunciationCheck = (
   const Recognition = window.SpeechRecognition ?? window.webkitSpeechRecognition;
   const recognition = new Recognition!();
 
-  recognition.lang = 'en-US';
+  recognition.lang = formatAccent(accent);
   recognition.interimResults = false;
   recognition.maxAlternatives = 1;
   recognition.continuous = false;
@@ -65,7 +68,7 @@ export const startPronunciationCheck = (
   return () => recognition.stop();
 };
 
-export const speakEnglish = (text: string, rate: number = 0.9): void => {
+export const speakEnglish = (text: string, rate: number = 0.9, accent: string = 'en-GB'): void => {
   if (!('speechSynthesis' in window)) {
     console.warn('Speech synthesis not supported in this browser.');
     return;
@@ -74,17 +77,21 @@ export const speakEnglish = (text: string, rate: number = 0.9): void => {
   window.speechSynthesis.cancel();
 
   const utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = 'en-GB';
+  utterance.lang = formatAccent(accent);
   utterance.rate = rate;
 
   const voices = window.speechSynthesis.getVoices();
-  const gbVoice = voices.find(v => v.lang === 'en-GB' || v.lang.startsWith('en_GB'));
-  const enVoice = voices.find(v => v.lang.startsWith('en'));
+  const targetLang = formatAccent(accent).toLowerCase();
+  const matchingVoice = voices.find(v => {
+    const candidate = v.lang.toLowerCase().replace('_', '-');
+    return candidate === targetLang || candidate.startsWith(`${targetLang}-`);
+  });
+  const fallbackVoice = voices.find(v => v.lang.toLowerCase().startsWith('en'));
 
-  if (gbVoice) {
-    utterance.voice = gbVoice;
-  } else if (enVoice) {
-    utterance.voice = enVoice;
+  if (matchingVoice) {
+    utterance.voice = matchingVoice;
+  } else if (fallbackVoice) {
+    utterance.voice = fallbackVoice;
   }
 
   window.speechSynthesis.speak(utterance);

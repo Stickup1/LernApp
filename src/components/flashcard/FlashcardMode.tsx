@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { VocabWord } from '../../types/vocab';
+import { EnglishAccent, VocabWord } from '../../types/vocab';
 import { Volume2, ArrowLeft, Check, Sparkles, HelpCircle, RotateCcw, Eye, Mic, MicOff } from 'lucide-react';
 import { isPronunciationCheckSupported, speakEnglish, startPronunciationCheck } from '../../services/speech';
 import { playSound } from '../../services/audio';
@@ -8,6 +8,7 @@ import { triggerConfetti } from '../../services/confetti';
 interface FlashcardModeProps {
   words: VocabWord[];
   soundEnabled: boolean;
+  voiceAccent: EnglishAccent;
   onUpdateWordBox: (wordId: string, newBox: number, isCorrect: boolean) => void;
   onAddXp: (amount: number) => void;
   onExit: () => void;
@@ -16,6 +17,7 @@ interface FlashcardModeProps {
 export const FlashcardMode: React.FC<FlashcardModeProps> = ({
   words,
   soundEnabled,
+  voiceAccent,
   onUpdateWordBox,
   onAddXp,
   onExit,
@@ -79,7 +81,7 @@ export const FlashcardMode: React.FC<FlashcardModeProps> = ({
     if (isCorrect) {
       setFeedback('correct');
       playSound('correct', soundEnabled);
-      if (direction === 'de-en') speakEnglish(currentWord.en);
+      if (direction === 'de-en') speakEnglish(currentWord.en, 0.9, voiceAccent);
       const earnedXp = hintLevel > 0 ? 8 : 12;
       onAddXp(earnedXp);
       onUpdateWordBox(currentWord.id, Math.min(5, (currentWord.box || 1) + 1), true);
@@ -112,7 +114,7 @@ export const FlashcardMode: React.FC<FlashcardModeProps> = ({
       return;
     }
 
-    speakEnglish(currentWord.en);
+    speakEnglish(currentWord.en, 0.9, voiceAccent);
     if (!isPronunciationCheckSupported()) {
       setPronunciationFeedback('Die Sprachaufnahme wird in diesem Browser nicht unterstützt.');
       return;
@@ -135,6 +137,7 @@ export const FlashcardMode: React.FC<FlashcardModeProps> = ({
         setIsListening(false);
         setPronunciationFeedback('Bitte noch einmal deutlich sprechen.');
       },
+      voiceAccent,
     );
   };
 
@@ -245,7 +248,7 @@ export const FlashcardMode: React.FC<FlashcardModeProps> = ({
         {(direction === 'en-de') && (
           <div className="flex items-center justify-center gap-2 flex-wrap">
             <button
-              onClick={() => speakEnglish(currentWord.en)}
+              onClick={() => speakEnglish(currentWord.en, 0.9, voiceAccent)}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-full transition-colors"
             >
               <Volume2 className="w-4 h-4" /> Anhören
@@ -277,7 +280,7 @@ export const FlashcardMode: React.FC<FlashcardModeProps> = ({
             <Eye className="w-4 h-4" />
             Richtig: <strong>{direction === 'en-de' ? currentWord.de : currentWord.en}</strong>
             {direction === 'de-en' && (
-              <button onClick={() => speakEnglish(currentWord.en)} className="ml-1">
+              <button onClick={() => speakEnglish(currentWord.en, 0.9, voiceAccent)} className="ml-1">
                 <Volume2 className="w-4 h-4 text-indigo-500" />
               </button>
             )}
@@ -344,7 +347,7 @@ export const FlashcardMode: React.FC<FlashcardModeProps> = ({
           {feedback === 'wrong' && !showSolution && (
             <button
               type="button"
-              onClick={() => { setShowSolution(true); if (direction === 'de-en') speakEnglish(currentWord.en); }}
+              onClick={() => { setShowSolution(true); if (direction === 'de-en') speakEnglish(currentWord.en, 0.9, voiceAccent); }}
               className="flex items-center gap-1.5 hover:text-indigo-600 transition-colors"
             >
               <Eye className="w-4 h-4" /> Lösung zeigen

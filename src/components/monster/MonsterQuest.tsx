@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { VocabWord } from '../../types/vocab';
+import { EnglishAccent, VocabWord } from '../../types/vocab';
 import { Swords, Heart, ArrowLeft, Volume2, Sparkles } from 'lucide-react';
 import { speakEnglish } from '../../services/speech';
 import { playSound } from '../../services/audio';
@@ -8,6 +8,7 @@ import { triggerMegaConfetti } from '../../services/confetti';
 interface MonsterQuestProps {
   words: VocabWord[];
   soundEnabled: boolean;
+  voiceAccent: EnglishAccent;
   onMonsterDefeated: () => void;
   onAddXp: (amount: number) => void;
   onExit: () => void;
@@ -23,6 +24,7 @@ const MONSTER_ROSTER = [
 export const MonsterQuest: React.FC<MonsterQuestProps> = ({
   words,
   soundEnabled,
+  voiceAccent,
   onMonsterDefeated,
   onAddXp,
   onExit,
@@ -227,7 +229,7 @@ export const MonsterQuest: React.FC<MonsterQuestProps> = ({
           {currentWord.en}
         </div>
         <button
-          onClick={() => speakEnglish(currentWord.en)}
+          onClick={() => speakEnglish(currentWord.en, 0.9, voiceAccent)}
           className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold text-indigo-600 hover:text-indigo-800"
         >
           <Volume2 className="w-4 h-4" /> Anhören

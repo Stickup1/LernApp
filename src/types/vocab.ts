@@ -20,6 +20,8 @@ export interface VocabUnit {
   words: VocabWord[];
 }
 
+export type EnglishAccent = 'en-GB' | 'en-US';
+
 export interface UserProgress {
   xp: number;
   level: number;
@@ -29,6 +31,7 @@ export interface UserProgress {
   monsterDefeatedCount: number;
   soundEnabled: boolean;
   ttsSpeed: number; // 0.8 to 1.0
+  voiceAccent: EnglishAccent;
 }
 
 export type LearningMode = 
