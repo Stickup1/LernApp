@@ -33,47 +33,83 @@ export const Dashboard: React.FC<DashboardProps> = ({
   const masteryPercent = allWords.length > 0 
     ? Math.round((masteredCount / allWords.length) * 100) 
     : 0;
+  const todayGoal = 20;
+  const todayProgressPercent = Math.min(100, Math.round((progress.wordsPracticedToday / todayGoal) * 100));
+  const nextMilestoneText = progress.wordsPracticedToday >= todayGoal
+    ? 'Tagesziel erreicht!'
+    : `${Math.max(0, todayGoal - progress.wordsPracticedToday)} Wörter bis zum Tagesziel`;
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-6 space-y-8">
-      {/* Hero Card */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-600 via-indigo-700 to-purple-800 text-white p-6 sm:p-8 shadow-xl shadow-indigo-200">
+      <div className="relative overflow-hidden rounded-[28px] bg-gradient-to-br from-indigo-600 via-indigo-700 to-purple-800 text-white p-6 sm:p-8 shadow-[0_24px_60px_rgba(79,70,229,0.22)]">
         <div className="absolute top-0 right-0 -mt-8 -mr-8 w-48 h-48 bg-white/10 rounded-full blur-2xl pointer-events-none" />
-        
-        <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
-          <div className="space-y-2">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/15 backdrop-blur-sm text-xs font-bold text-indigo-100">
+        <div className="absolute bottom-0 left-0 -mb-10 -ml-10 w-40 h-40 bg-amber-300/10 rounded-full blur-2xl pointer-events-none" />
+
+        <div className="relative z-10 grid gap-6 lg:grid-cols-[1.4fr_0.8fr]">
+          <div className="space-y-4">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/15 backdrop-blur-sm text-xs font-bold text-indigo-100 border border-white/10">
               <Sparkles className="w-3.5 h-3.5 text-amber-300" />
               <span>Englisch-Training</span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-black tracking-tight">
-              Hallo Lernheld! Ready für die nächste Mission? 🚀
-            </h1>
-            <p className="text-indigo-100 text-sm max-w-md">
-              Übe Vokabeln, hör dir die Aussprache an und besiege das Vokabel-Monster im Bosskampf!
-            </p>
+
+            <div className="space-y-2">
+              <h1 className="text-2xl sm:text-3xl font-black tracking-tight leading-tight">
+                Hallo Lernheld! Ready für die nächste Mission? 🚀
+              </h1>
+              <p className="text-indigo-100 text-sm max-w-md leading-relaxed">
+                Übe Vokabeln, hör dir die Aussprache an und besiege das Vokabel-Monster im Bosskampf!
+              </p>
+            </div>
+
+            <div className="rounded-2xl bg-white/10 border border-white/10 p-3 backdrop-blur-sm max-w-md">
+              <div className="flex items-center justify-between text-[11px] uppercase tracking-[0.12em] text-indigo-100 font-bold mb-2">
+                <span>Heute</span>
+                <span>{progress.wordsPracticedToday}/{todayGoal}</span>
+              </div>
+              <div className="h-2.5 bg-white/10 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-amber-300 via-orange-300 to-emerald-300 rounded-full transition-all duration-500"
+                  style={{ width: `${todayProgressPercent}%` }}
+                />
+              </div>
+              <div className="mt-2 text-sm font-semibold text-amber-100">
+                {nextMilestoneText}
+              </div>
+            </div>
           </div>
 
-          <div className="bg-white/15 backdrop-blur-md rounded-2xl p-4 border border-white/20 flex items-center gap-4 self-stretch sm:self-auto justify-around">
-            <div className="text-center">
-              <div className="text-2xl sm:text-3xl font-black text-amber-300">{progress.xp}</div>
-              <div className="text-xs text-indigo-100 font-semibold">Gesamt XP</div>
+          <div className="bg-white/15 backdrop-blur-md rounded-2xl p-4 border border-white/20 shadow-inner shadow-white/10">
+            <div className="grid grid-cols-3 gap-3 text-center">
+              <div className="rounded-2xl bg-slate-950/10 p-3 border border-white/10">
+                <div className="text-2xl sm:text-3xl font-black text-amber-300">{progress.xp}</div>
+                <div className="text-[11px] text-indigo-100 font-semibold mt-1">XP</div>
+              </div>
+              <div className="rounded-2xl bg-slate-950/10 p-3 border border-white/10">
+                <div className="text-2xl sm:text-3xl font-black text-emerald-300">{masteryPercent}%</div>
+                <div className="text-[11px] text-indigo-100 font-semibold mt-1">Lernstand</div>
+              </div>
+              <div className="rounded-2xl bg-slate-950/10 p-3 border border-white/10">
+                <div className="text-2xl sm:text-3xl font-black text-pink-300">{progress.monsterDefeatedCount}</div>
+                <div className="text-[11px] text-indigo-100 font-semibold mt-1">Monster</div>
+              </div>
             </div>
-            <div className="w-px h-10 bg-white/20" />
-            <div className="text-center">
-              <div className="text-2xl sm:text-3xl font-black text-emerald-300">{masteryPercent}%</div>
-              <div className="text-xs text-indigo-100 font-semibold">Gemeistert</div>
-            </div>
-            <div className="w-px h-10 bg-white/20" />
-            <div className="text-center">
-              <div className="text-2xl sm:text-3xl font-black text-pink-300">{progress.monsterDefeatedCount}</div>
-              <div className="text-xs text-indigo-100 font-semibold">Monster besiegt</div>
+
+            <div className="mt-4 pt-4 border-t border-white/10">
+              <div className="flex items-center justify-between text-xs text-indigo-100 font-semibold">
+                <span>Aktuelles Level</span>
+                <span className="text-lg font-black text-white">{progress.level}</span>
+              </div>
+              <div className="mt-2 h-2 bg-white/10 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-emerald-300 to-cyan-300 rounded-full transition-all duration-500"
+                  style={{ width: `${Math.min(100, masteryPercent)}%` }}
+                />
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Leitner Box Progress Mini-Bar */}
-        <div className="mt-6 pt-5 border-t border-white/15">
+        <div className="relative z-10 mt-6 pt-5 border-t border-white/15">
           <div className="flex items-center justify-between text-xs font-semibold mb-2">
             <span className="text-indigo-100">5-Fächer-Kasten Fortschritt ({allWords.length} Vokabeln):</span>
             <span className="text-amber-200">Fach 5 (Gekonnt): {masteredCount} Wörter</span>
@@ -201,7 +237,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
           {/* 1. Flashcards */}
           <div
             onClick={() => onStartMode('flashcards')}
-            className="group cursor-pointer bg-white rounded-3xl p-5 border border-slate-200 hover:border-indigo-400 hover:shadow-lg transition-all flex flex-col justify-between"
+            className="group cursor-pointer bg-white rounded-3xl p-5 border border-slate-200 hover:border-indigo-400 hover:shadow-lg hover:-translate-y-1 transition-all duration-200 flex flex-col justify-between"
           >
             <div>
               <div className="w-12 h-12 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center font-bold text-2xl mb-4 group-hover:scale-110 transition-transform">
@@ -223,7 +259,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
           {/* 2. Speed Quiz */}
           <div
             onClick={() => onStartMode('quiz')}
-            className="group cursor-pointer bg-white rounded-3xl p-5 border border-slate-200 hover:border-indigo-400 hover:shadow-lg transition-all flex flex-col justify-between"
+            className="group cursor-pointer bg-white rounded-3xl p-5 border border-slate-200 hover:border-indigo-400 hover:shadow-lg hover:-translate-y-1 transition-all duration-200 flex flex-col justify-between"
           >
             <div>
               <div className="w-12 h-12 rounded-2xl bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-2xl mb-4 group-hover:scale-110 transition-transform">
@@ -245,7 +281,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
           {/* 3. Scramble Mode */}
           <div
             onClick={() => onStartMode('scramble')}
-            className="group cursor-pointer bg-white rounded-3xl p-5 border border-slate-200 hover:border-indigo-400 hover:shadow-lg transition-all flex flex-col justify-between"
+            className="group cursor-pointer bg-white rounded-3xl p-5 border border-slate-200 hover:border-indigo-400 hover:shadow-lg hover:-translate-y-1 transition-all duration-200 flex flex-col justify-between"
           >
             <div>
               <div className="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-2xl mb-4 group-hover:scale-110 transition-transform">
@@ -267,7 +303,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
           {/* 4. Writing Mode */}
           <div
             onClick={() => onStartMode('writing')}
-            className="group cursor-pointer bg-white rounded-3xl p-5 border border-slate-200 hover:border-indigo-400 hover:shadow-lg transition-all flex flex-col justify-between"
+            className="group cursor-pointer bg-white rounded-3xl p-5 border border-slate-200 hover:border-indigo-400 hover:shadow-lg hover:-translate-y-1 transition-all duration-200 flex flex-col justify-between"
           >
             <div>
               <div className="w-12 h-12 rounded-2xl bg-cyan-100 text-cyan-700 flex items-center justify-center font-bold text-2xl mb-4 group-hover:scale-110 transition-transform">
@@ -289,7 +325,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
           {/* 5. Boss Fight: Monster Quest */}
           <div
             onClick={() => onStartMode('monster')}
-            className="group cursor-pointer bg-gradient-to-br from-pink-500 via-rose-500 to-purple-600 text-white rounded-3xl p-5 shadow-lg shadow-pink-200 hover:scale-[1.02] transition-all flex flex-col justify-between md:col-span-2 lg:col-span-2"
+            className="group cursor-pointer bg-gradient-to-br from-pink-500 via-rose-500 to-purple-600 text-white rounded-3xl p-5 shadow-[0_18px_35px_rgba(236,72,153,0.28)] hover:-translate-y-1 hover:shadow-[0_20px_42px_rgba(168,85,247,0.30)] transition-all duration-200 flex flex-col justify-between md:col-span-2 lg:col-span-2"
           >
             <div>
               <div className="flex items-center justify-between">
