@@ -35,6 +35,14 @@ Läuft 100% statisch im Browser, werbefrei, offline-fähig und optimiert für **
 - **Synthetisierte Audio-Effekte (Web Audio API)**
 - **Konfetti-Effekte** bei Erfolgen und Level-Ups
 
+### 4. Backup & kostenlose Synchronisation ohne Backend
+- **Export/Import als JSON-Datei:** Fortschritt, XP, Level, Vokabeln und Einheiten können als Datei exportiert und auf einem anderen Gerät oder Browser wieder importiert werden.
+- **Kostenlose, browserunabhängige Optionen:**
+  1. Datei via Google Drive / Dropbox / OneDrive in der Cloud sichern.
+  2. JSON-Datei mit GitHub Gist, Notion oder einem eigenen Cloud-Ordner synchronisieren.
+  3. Für mehr Komfort später: Supabase oder Firebase als kostenloses Backend mit Auth + Postgres/Firestore einbauen.
+- **Warum das sinnvoll ist:** Ein statisches Frontend bleibt leicht und schnell, während der Lernstand trotzdem separat von einem einzelnen Browser persisitiert werden kann.
+
 ---
 
 ## 🚀 Lokale Entwicklung

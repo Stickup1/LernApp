@@ -1,7 +1,7 @@
 import React from 'react';
 import { UserProgress, LearningMode, EnglishAccent } from '../types/vocab';
 import { getXpForNextLevel } from '../services/storage';
-import { Flame, Volume2, VolumeX, Sparkles, Home, Settings } from 'lucide-react';
+import { Flame, Volume2, VolumeX, Sparkles, Home, Settings, Download, Upload } from 'lucide-react';
 
 interface NavbarProps {
   progress: UserProgress;
@@ -9,6 +9,8 @@ interface NavbarProps {
   onSelectMode: (mode: LearningMode) => void;
   onToggleSound: () => void;
   onChangeVoiceAccent: (accent: EnglishAccent) => void;
+  onExportData: () => void;
+  onImportData: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -17,6 +19,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   onSelectMode,
   onToggleSound,
   onChangeVoiceAccent,
+  onExportData,
+  onImportData,
 }) => {
   const xpNeeded = getXpForNextLevel(progress.level);
   const xpCurrentLevel = progress.xp % xpNeeded;
@@ -69,18 +73,34 @@ export const Navbar: React.FC<NavbarProps> = ({
 
           {/* Nav Actions */}
           <div className="flex items-center gap-2">
-            <label className="hidden sm:flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-2 py-1.5 text-[11px] font-bold text-slate-600">
-              <span>Voice</span>
+            <label className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-2 py-1.5 text-[11px] font-bold text-slate-600 shadow-sm">
+              <span className="hidden sm:inline">Voice</span>
               <select
                 value={progress.voiceAccent}
                 onChange={e => onChangeVoiceAccent(e.target.value as EnglishAccent)}
-                className="bg-transparent font-bold text-slate-700 outline-none"
+                className="bg-transparent font-bold text-slate-700 outline-none cursor-pointer"
                 aria-label="Aussprache-Auswahl"
               >
                 <option value="en-GB">UK</option>
                 <option value="en-US">US</option>
               </select>
             </label>
+
+            <button
+              onClick={onExportData}
+              title="Lernstand sichern"
+              className="p-2 text-slate-600 hover:bg-slate-100 rounded-xl transition-colors"
+            >
+              <Download className="w-4 h-4" />
+            </button>
+
+            <button
+              onClick={onImportData}
+              title="Backup wiederherstellen"
+              className="p-2 text-slate-600 hover:bg-slate-100 rounded-xl transition-colors"
+            >
+              <Upload className="w-4 h-4" />
+            </button>
 
             <button
               onClick={() => onSelectMode('dashboard')}

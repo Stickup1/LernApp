@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { VocabUnit, UserProgress, LearningMode, VocabWord, EnglishAccent } from './types/vocab';
 import {
   getStoredUnits,
@@ -22,6 +22,7 @@ export const App: React.FC = () => {
   const [selectedUnitId, setSelectedUnitId] = useState<string>('all');
   const [currentMode, setCurrentMode] = useState<LearningMode>('dashboard');
   const [progress, setProgress] = useState<UserProgress>(getStoredProgress);
+  const importInputRef = useRef<HTMLInputElement | null>(null);
 
   // Initialize units from storage
   useEffect(() => {
@@ -106,6 +107,60 @@ export const App: React.FC = () => {
     }));
   };
 
+  const handleExportData = () => {
+    const payload = {
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      progress,
+      units,
+    };
+
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `lernheld-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleImportData = async () => {
+    importInputRef.current?.click();
+  };
+
+  const handleRawImportFile = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const parsed = JSON.parse(String(reader.result || '{}'));
+
+        if (Array.isArray(parsed.units)) {
+          setUnits(parsed.units);
+          saveStoredUnits(parsed.units);
+        }
+
+        if (parsed.progress && typeof parsed.progress === 'object') {
+          const mergedProgress = { ...getStoredProgress(), ...parsed.progress };
+          setProgress(mergedProgress);
+          saveStoredProgress(mergedProgress);
+        }
+
+        setCurrentMode('dashboard');
+        window.alert('Backup erfolgreich wiederhergestellt.');
+      } catch (error) {
+        console.error('Import failed', error);
+        window.alert('Die Backup-Datei ist ungültig. Bitte prüfe das Format.');
+      } finally {
+        event.target.value = '';
+      }
+    };
+
+    reader.readAsText(file);
+  };
+
   // Get active word pool for current selected unit
   const activeWords: VocabWord[] = 
     selectedUnitId === 'all'
@@ -120,12 +175,22 @@ export const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col selection:bg-indigo-500 selection:text-white">
+      <input
+        ref={importInputRef}
+        type="file"
+        accept="application/json"
+        className="hidden"
+        onChange={handleRawImportFile}
+      />
+
       <Navbar
         progress={progress}
         currentMode={currentMode}
         onSelectMode={handleSelectMode}
         onToggleSound={handleToggleSound}
         onChangeVoiceAccent={handleChangeVoiceAccent}
+        onExportData={handleExportData}
+        onImportData={handleImportData}
       />
 
       <main className="flex-1 pb-16">
