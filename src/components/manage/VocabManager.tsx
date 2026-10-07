@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { VocabUnit, VocabWord } from '../../types/vocab';
 import { Plus, Trash2, Download, Upload, ArrowLeft, FileText, Sparkles, BookPlus } from 'lucide-react';
-import { DEFAULT_UNITS } from '../../data/defaultUnits';
 
 interface VocabManagerProps {
   units: VocabUnit[];
@@ -74,11 +73,12 @@ export const VocabManager: React.FC<VocabManagerProps> = ({
       return;
     }
 
-    if (importUnitName.trim()) {
+    if (importUnitName.trim() || units.length === 0) {
       // Create a brand new unit
+      const fallbackTitle = importUnitName.trim() || 'Unit 1: Meine Vokabeln';
       const newUnit: VocabUnit = {
         id: `unit_${Date.now()}`,
-        title: importUnitName.trim(),
+        title: fallbackTitle,
         description: `Eigene Lerneinheit (${newWords.length} Wörter)`,
         icon: '📝',
         isCustom: true,
@@ -110,7 +110,24 @@ export const VocabManager: React.FC<VocabManagerProps> = ({
   // 2. Manual Word Add Handler
   const handleAddManualWord = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!manualEn.trim() || !manualDe.trim() || !currentUnit) return;
+    if (!manualEn.trim() || !manualDe.trim()) return;
+
+    let targetUnit = currentUnit;
+    let currentUnitsList = units;
+
+    if (!targetUnit) {
+      // Auto-create first unit if none exists
+      targetUnit = {
+        id: `unit_${Date.now()}`,
+        title: 'Unit 1: Meine Vokabeln',
+        description: 'Eigene Lerneinheit',
+        icon: '📘',
+        isCustom: true,
+        words: [],
+      };
+      currentUnitsList = [targetUnit];
+      setSelectedUnitId(targetUnit.id);
+    }
 
     const newWord: VocabWord = {
       id: `w_custom_${Date.now()}`,
@@ -122,8 +139,8 @@ export const VocabManager: React.FC<VocabManagerProps> = ({
       incorrectCount: 0,
     };
 
-    const updated = units.map(u => {
-      if (u.id === currentUnit.id) {
+    const updated = currentUnitsList.map(u => {
+      if (u.id === targetUnit!.id) {
         return {
           ...u,
           words: [...u.words, newWord],
@@ -290,30 +307,32 @@ export const VocabManager: React.FC<VocabManagerProps> = ({
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">
-                Zu welcher Unit hinzufügen?
-              </label>
-              <select
-                value={selectedUnitId}
-                onChange={e => setSelectedUnitId(e.target.value)}
-                className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-medium"
-              >
-                {units.map(u => (
-                  <option key={u.id} value={u.id}>
-                    {u.icon} {u.title}
-                  </option>
-                ))}
-              </select>
-            </div>
+            {units.length > 0 ? (
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Zu welcher Unit hinzufügen?
+                </label>
+                <select
+                  value={selectedUnitId}
+                  onChange={e => setSelectedUnitId(e.target.value)}
+                  className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-medium"
+                >
+                  {units.map(u => (
+                    <option key={u.id} value={u.id}>
+                      {u.icon} {u.title}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            ) : null}
 
-            <div>
+            <div className={units.length === 0 ? "sm:col-span-2" : ""}>
               <label className="block text-xs font-bold text-slate-700 mb-1">
-                ...ODER als neue Unit anlegen (Name eingeben):
+                {units.length === 0 ? "Name deiner neuen Unit (z. B. Unit 1: School):" : "...ODER als neue Unit anlegen (Name eingeben):"}
               </label>
               <input
                 type="text"
-                placeholder="z.B. Unit 6: My Town"
+                placeholder={units.length === 0 ? "z.B. Unit 1: Back to School" : "z.B. Unit 2: My Family"}
                 value={importUnitName}
                 onChange={e => setImportUnitName(e.target.value)}
                 className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm"
@@ -361,22 +380,28 @@ export const VocabManager: React.FC<VocabManagerProps> = ({
           </div>
 
           <form onSubmit={handleAddManualWord} className="space-y-4">
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">
-                Ziel-Lerneinheit:
-              </label>
-              <select
-                value={selectedUnitId}
-                onChange={e => setSelectedUnitId(e.target.value)}
-                className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-medium"
-              >
-                {units.map(u => (
-                  <option key={u.id} value={u.id}>
-                    {u.icon} {u.title}
-                  </option>
-                ))}
-              </select>
-            </div>
+            {units.length > 0 ? (
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Ziel-Lerneinheit:
+                </label>
+                <select
+                  value={selectedUnitId}
+                  onChange={e => setSelectedUnitId(e.target.value)}
+                  className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-medium"
+                >
+                  {units.map(u => (
+                    <option key={u.id} value={u.id}>
+                      {u.icon} {u.title}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            ) : (
+              <div className="p-3 bg-indigo-50 border border-indigo-200 rounded-xl text-xs text-indigo-800 font-semibold">
+                Hinweis: Da noch keine Unit existiert, wird beim Speichern automatisch „Unit 1: Meine Vokabeln“ erstellt.
+              </div>
+            )}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
@@ -440,7 +465,7 @@ export const VocabManager: React.FC<VocabManagerProps> = ({
             <form onSubmit={handleCreateUnit} className="flex gap-2">
               <input
                 type="text"
-                placeholder="Name der neuen Unit (z.B. Unit 6: Animals)"
+                placeholder="Name der neuen Unit (z.B. Unit 1: School)"
                 value={newUnitTitle}
                 onChange={e => setNewUnitTitle(e.target.value)}
                 className="flex-1 p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm"
@@ -463,60 +488,64 @@ export const VocabManager: React.FC<VocabManagerProps> = ({
           </div>
 
           {/* Unit selector and word list */}
-          <div className="bg-white rounded-3xl p-5 border border-slate-200 shadow-sm space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="text-2xl">{currentUnit?.icon}</span>
-                <select
-                  value={selectedUnitId}
-                  onChange={e => setSelectedUnitId(e.target.value)}
-                  className="p-2 bg-slate-50 border border-slate-300 rounded-xl font-bold text-slate-800"
-                >
-                  {units.map(u => (
-                    <option key={u.id} value={u.id}>
-                      {u.title} ({u.words.length} Wörter)
-                    </option>
-                  ))}
-                </select>
-              </div>
+          {units.length > 0 ? (
+            <div className="bg-white rounded-3xl p-5 border border-slate-200 shadow-sm space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="text-2xl">{currentUnit?.icon}</span>
+                  <select
+                    value={selectedUnitId}
+                    onChange={e => setSelectedUnitId(e.target.value)}
+                    className="p-2 bg-slate-50 border border-slate-300 rounded-xl font-bold text-slate-800"
+                  >
+                    {units.map(u => (
+                      <option key={u.id} value={u.id}>
+                        {u.title} ({u.words.length} Wörter)
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-              {currentUnit?.isCustom && (
                 <button
                   onClick={() => handleDeleteUnit(currentUnit.id)}
                   className="text-xs text-rose-600 hover:text-rose-800 font-bold flex items-center gap-1"
                 >
                   <Trash2 className="w-3.5 h-3.5" /> Unit löschen
                 </button>
-              )}
-            </div>
+              </div>
 
-            {/* Words list table */}
-            <div className="divide-y divide-slate-100 max-h-96 overflow-y-auto">
-              {currentUnit?.words.length === 0 ? (
-                <div className="text-center py-8 text-sm text-slate-400">
-                  Noch keine Vokabeln in dieser Unit vorhanden.
-                </div>
-              ) : (
-                currentUnit?.words.map(w => (
-                  <div key={w.id} className="py-2.5 flex items-center justify-between gap-4">
-                    <div className="flex-1">
-                      <div className="font-extrabold text-slate-800 text-sm">{w.en}</div>
-                      <div className="text-xs text-slate-500">{w.de}</div>
-                    </div>
-                    <div className="text-xs font-bold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700">
-                      Kasten-Fach {w.box || 1}
-                    </div>
-                    <button
-                      onClick={() => handleDeleteWord(w.id)}
-                      className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg transition-colors"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+              {/* Words list table */}
+              <div className="divide-y divide-slate-100 max-h-96 overflow-y-auto">
+                {currentUnit?.words.length === 0 ? (
+                  <div className="text-center py-8 text-sm text-slate-400">
+                    Noch keine Vokabeln in dieser Unit vorhanden.
                   </div>
-                ))
-              )}
+                ) : (
+                  currentUnit?.words.map(w => (
+                    <div key={w.id} className="py-2.5 flex items-center justify-between gap-4">
+                      <div className="flex-1">
+                        <div className="font-extrabold text-slate-800 text-sm">{w.en}</div>
+                        <div className="text-xs text-slate-500">{w.de}</div>
+                      </div>
+                      <div className="text-xs font-bold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700">
+                        Kasten-Fach {w.box || 1}
+                      </div>
+                      <button
+                        onClick={() => handleDeleteWord(w.id)}
+                        className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg transition-colors"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))
+                )}
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="bg-white rounded-3xl p-8 border border-slate-200 text-center text-slate-500 text-sm">
+              Noch keine Einheiten vorhanden. Erstelle oben deine erste Unit!
+            </div>
+          )}
         </div>
       )}
 
@@ -568,18 +597,18 @@ export const VocabManager: React.FC<VocabManagerProps> = ({
           </div>
 
           <div className="pt-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-            <span>Auf Werkseinstellungen zurücksetzen?</span>
+            <span>Alle Einheiten leeren?</span>
             <button
               onClick={() => {
-                if (confirm('Möchtest du wirklich alle Einheiten auf die Standard-Vokabeln der 5. Klasse zurücksetzen?')) {
-                  onSaveUnits(DEFAULT_UNITS);
-                  setSelectedUnitId(DEFAULT_UNITS[0].id);
-                  alert('Auf Standard-Vokabeln zurückgesetzt!');
+                if (confirm('Möchtest du wirklich alle Einheiten löschen und ganz neu anfangen?')) {
+                  onSaveUnits([]);
+                  setSelectedUnitId('');
+                  alert('Alle Einheiten wurden gelöscht.');
                 }
               }}
               className="text-rose-600 hover:text-rose-800 font-bold"
             >
-              Standard-Vokabeln wiederherstellen
+              Alle Einheiten löschen
             </button>
           </div>
         </div>

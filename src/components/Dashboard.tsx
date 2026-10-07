@@ -89,77 +89,115 @@ export const Dashboard: React.FC<DashboardProps> = ({
         </div>
       </div>
 
-      {/* Unit Selector */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-black text-slate-800 flex items-center gap-2">
-            <span>📚</span>
-            <span>Wähle deine Lerneinheit (Unit)</span>
-          </h2>
-          <button
-            onClick={() => onStartMode('manager')}
-            className="text-xs font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-xl transition-colors"
-          >
-            <PlusCircle className="w-3.5 h-3.5" />
-            <span>Neue Unit / Vokabeln einpflegen</span>
-          </button>
+      {/* Unit Selector & Modes or Empty State */}
+      {units.length === 0 ? (
+        <div className="bg-white rounded-3xl p-8 sm:p-12 border-2 border-dashed border-indigo-200 text-center space-y-5 shadow-xs">
+          <div className="w-20 h-20 mx-auto rounded-3xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-4xl shadow-inner">
+            📚
+          </div>
+          <div className="max-w-md mx-auto space-y-2">
+            <h3 className="text-2xl font-black text-slate-800">
+              Noch keine Lerneinheiten vorhanden
+            </h3>
+            <p className="text-sm text-slate-500 leading-relaxed">
+              Lege jetzt deine erste Unit an (z. B. <em>Unit 1: My School</em>) und trage deine Vokabeln oder Schulbuch-Listen ein, um mit dem Lernen und den Spielen zu beginnen!
+            </p>
+          </div>
+          <div className="pt-2">
+            <button
+              onClick={() => onStartMode('manager')}
+              className="px-6 py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-base rounded-2xl shadow-lg shadow-indigo-200 inline-flex items-center gap-2.5 transition-all hover:scale-105 active:scale-95"
+            >
+              <PlusCircle className="w-5 h-5" /> Erste Unit anlegen & Vokabeln eintragen
+            </button>
+          </div>
         </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-          {/* Option: All Units */}
-          <button
-            onClick={() => onSelectUnit('all')}
-            className={`p-4 rounded-2xl border text-left transition-all ${
-              selectedUnitId === 'all'
-                ? 'bg-indigo-50 border-indigo-500 shadow-md ring-2 ring-indigo-400/20'
-                : 'bg-white border-slate-200 hover:border-indigo-300 hover:shadow-xs'
-            }`}
-          >
+      ) : (
+        <>
+          {/* Unit Selector */}
+          <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-2xl">🌟</span>
-              <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700">
-                {units.flatMap(u => u.words).length} Wörter
-              </span>
-            </div>
-            <div className="font-extrabold text-slate-800 mt-2">Alle Units zusammen</div>
-            <div className="text-xs text-slate-500 mt-0.5">Große Gesamtwiederholung</div>
-          </button>
-
-          {/* Individual Units */}
-          {units.map((unit) => {
-            const isSelected = selectedUnitId === unit.id;
-            return (
+              <h2 className="text-lg font-black text-slate-800 flex items-center gap-2">
+                <span>📚</span>
+                <span>Wähle deine Lerneinheit (Unit)</span>
+              </h2>
               <button
-                key={unit.id}
-                onClick={() => onSelectUnit(unit.id)}
+                onClick={() => onStartMode('manager')}
+                className="text-xs font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-xl transition-colors"
+              >
+                <PlusCircle className="w-3.5 h-3.5" />
+                <span>Unit anlegen / Vokabeln verwalten</span>
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+              {/* Option: All Units */}
+              <button
+                onClick={() => onSelectUnit('all')}
                 className={`p-4 rounded-2xl border text-left transition-all ${
-                  isSelected
+                  selectedUnitId === 'all'
                     ? 'bg-indigo-50 border-indigo-500 shadow-md ring-2 ring-indigo-400/20'
                     : 'bg-white border-slate-200 hover:border-indigo-300 hover:shadow-xs'
                 }`}
               >
                 <div className="flex items-center justify-between">
-                  <span className="text-2xl">{unit.icon}</span>
-                  <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700">
-                    {unit.words.length} Wörter
+                  <span className="text-2xl">🌟</span>
+                  <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700">
+                    {units.flatMap(u => u.words).length} Wörter
                   </span>
                 </div>
-                <div className="font-extrabold text-slate-800 mt-2 truncate">{unit.title}</div>
-                <div className="text-xs text-slate-500 mt-0.5 truncate">{unit.description}</div>
+                <div className="font-extrabold text-slate-800 mt-2">Alle Units zusammen</div>
+                <div className="text-xs text-slate-500 mt-0.5">Große Gesamtwiederholung</div>
               </button>
-            );
-          })}
-        </div>
-      </div>
 
-      {/* Learning Modes / Game Modes */}
-      <div className="space-y-4">
-        <h2 className="text-lg font-black text-slate-800 flex items-center gap-2">
-          <span>🎮</span>
-          <span>Wähle deinen Trainings-Modus</span>
-        </h2>
+              {/* Individual Units */}
+              {units.map((unit) => {
+                const isSelected = selectedUnitId === unit.id;
+                return (
+                  <button
+                    key={unit.id}
+                    onClick={() => onSelectUnit(unit.id)}
+                    className={`p-4 rounded-2xl border text-left transition-all ${
+                      isSelected
+                        ? 'bg-indigo-50 border-indigo-500 shadow-md ring-2 ring-indigo-400/20'
+                        : 'bg-white border-slate-200 hover:border-indigo-300 hover:shadow-xs'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-2xl">{unit.icon}</span>
+                      <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700">
+                        {unit.words.length} Wörter
+                      </span>
+                    </div>
+                    <div className="font-extrabold text-slate-800 mt-2 truncate">{unit.title}</div>
+                    <div className="text-xs text-slate-500 mt-0.5 truncate">{unit.description}</div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {/* Warning if selected unit has no words */}
+          {allWords.length === 0 && (
+            <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl text-amber-800 text-sm font-semibold flex items-center justify-between">
+              <span>Diese Unit hat noch keine Vokabeln eingetragen.</span>
+              <button
+                onClick={() => onStartMode('manager')}
+                className="px-3 py-1 bg-amber-600 text-white rounded-xl text-xs font-bold hover:bg-amber-700"
+              >
+                Vokabeln hinzufügen
+              </button>
+            </div>
+          )}
+
+          {/* Learning Modes / Game Modes */}
+          <div className="space-y-4">
+            <h2 className="text-lg font-black text-slate-800 flex items-center gap-2">
+              <span>🎮</span>
+              <span>Wähle deinen Trainings-Modus</span>
+            </h2>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {/* 1. Flashcards */}
           <div
             onClick={() => onStartMode('flashcards')}
@@ -276,6 +314,8 @@ export const Dashboard: React.FC<DashboardProps> = ({
           </div>
         </div>
       </div>
-    </div>
-  );
+    </>
+  )}
+</div>
+);
 };

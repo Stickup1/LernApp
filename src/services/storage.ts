@@ -1,7 +1,7 @@
 import { VocabUnit, UserProgress } from '../types/vocab';
 import { DEFAULT_UNITS } from '../data/defaultUnits';
 
-const UNITS_STORAGE_KEY = 'lernheld_vocab_units_v1';
+const UNITS_STORAGE_KEY = 'lernheld_vocab_units_v2';
 const PROGRESS_STORAGE_KEY = 'lernheld_user_progress_v1';
 
 export const INITIAL_PROGRESS: UserProgress = {
@@ -17,10 +17,14 @@ export const INITIAL_PROGRESS: UserProgress = {
 
 export const getStoredUnits = (): VocabUnit[] => {
   try {
+    // Clear old v1 dummy data if present
+    if (localStorage.getItem('lernheld_vocab_units_v1')) {
+      localStorage.removeItem('lernheld_vocab_units_v1');
+    }
     const raw = localStorage.getItem(UNITS_STORAGE_KEY);
     if (!raw) return DEFAULT_UNITS;
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) && parsed.length > 0 ? parsed : DEFAULT_UNITS;
+    return Array.isArray(parsed) ? parsed : DEFAULT_UNITS;
   } catch (e) {
     console.error('Failed to load units from localStorage', e);
     return DEFAULT_UNITS;
