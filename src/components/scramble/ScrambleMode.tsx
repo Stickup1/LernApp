@@ -38,16 +38,14 @@ export const ScrambleMode: React.FC<ScrambleModeProps> = ({
 
   useEffect(() => {
     if (!currentWord) return;
-    // Prepare letters from the english word (ignoring spaces or punctuation in tile creation, or keeping spaces as spacers)
-    // Let's break down into characters
-    const cleanWord = currentWord.en.toLowerCase();
-    const tiles: LetterTile[] = cleanWord.split('').map((char, idx) => ({
+
+    const wordForTiles = currentWord.en;
+    const tiles: LetterTile[] = wordForTiles.split('').map((char, idx) => ({
       id: `${char}_${idx}_${Math.random()}`,
       char,
       isUsed: false,
     }));
 
-    // Shuffle tiles
     setAvailableTiles([...tiles].sort(() => Math.random() - 0.5));
     setSelectedTiles([]);
     setIsSuccess(false);
@@ -56,7 +54,7 @@ export const ScrambleMode: React.FC<ScrambleModeProps> = ({
   if (!currentWord) return null;
 
   const currentConstructedWord = selectedTiles.map(t => t.char).join('');
-  const targetWord = currentWord.en.toLowerCase();
+  const targetWord = currentWord.en;
 
   const handleTileClick = (tile: LetterTile) => {
     if (tile.isUsed || isSuccess) return;
