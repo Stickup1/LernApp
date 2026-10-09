@@ -98,6 +98,16 @@ export const ScrambleMode: React.FC<ScrambleModeProps> = ({
     );
   };
 
+  const handleUndoLastTile = () => {
+    if (selectedTiles.length === 0 || isSuccess) return;
+
+    const lastTile = selectedTiles[selectedTiles.length - 1];
+    setSelectedTiles(prev => prev.slice(0, -1));
+    setAvailableTiles(prev =>
+      prev.map(t => (t.id === lastTile.id ? { ...t, isUsed: false } : t))
+    );
+  };
+
   const handleReset = () => {
     setSelectedTiles([]);
     setAvailableTiles(prev => prev.map(t => ({ ...t, isUsed: false })));
@@ -210,11 +220,19 @@ export const ScrambleMode: React.FC<ScrambleModeProps> = ({
       {/* Action Buttons */}
       <div className="flex items-center justify-between gap-3">
         <button
+          onClick={handleUndoLastTile}
+          disabled={selectedTiles.length === 0 || isSuccess}
+          className="px-4 py-2.5 rounded-xl bg-amber-100 text-amber-800 hover:bg-amber-200 font-bold text-xs flex items-center gap-1.5 transition-colors disabled:opacity-50"
+        >
+          <ArrowLeft className="w-3.5 h-3.5" /> Letzter Schritt
+        </button>
+
+        <button
           onClick={handleReset}
           disabled={selectedTiles.length === 0 || isSuccess}
           className="px-4 py-2.5 rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 font-bold text-xs flex items-center gap-1.5 transition-colors disabled:opacity-50"
         >
-          <RotateCcw className="w-3.5 h-3.5" /> Zurücksetzen
+          <RotateCcw className="w-3.5 h-3.5" /> Alle zurücksetzen
         </button>
 
         <button

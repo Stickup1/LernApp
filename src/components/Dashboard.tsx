@@ -79,84 +79,66 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-6 space-y-8">
-      <div className="relative overflow-hidden rounded-[28px] bg-gradient-to-br from-indigo-600 via-indigo-700 to-purple-800 text-white p-6 sm:p-8 shadow-[0_24px_60px_rgba(79,70,229,0.22)]">
+      <div className="relative overflow-hidden rounded-[28px] bg-gradient-to-br from-indigo-600 via-indigo-700 to-purple-800 text-white p-5 sm:p-6 shadow-[0_24px_60px_rgba(79,70,229,0.22)]">
         <div className="absolute top-0 right-0 -mt-8 -mr-8 w-48 h-48 bg-white/10 rounded-full blur-2xl pointer-events-none" />
         <div className="absolute bottom-0 left-0 -mb-10 -ml-10 w-40 h-40 bg-amber-300/10 rounded-full blur-2xl pointer-events-none" />
 
-        <div className="relative z-10 grid gap-6 lg:grid-cols-[1.4fr_0.8fr]">
-          <div className="space-y-4">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/15 backdrop-blur-sm text-xs font-bold text-indigo-100 border border-white/10">
+        <div className="relative z-10 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div className="space-y-3 max-w-xl">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/15 backdrop-blur-sm text-[11px] font-bold text-indigo-100 border border-white/10">
               <Sparkles className="w-3.5 h-3.5 text-amber-300" />
               <span>Englisch-Training</span>
             </div>
 
-            <div className="space-y-2">
+            <div>
               <h1 className="text-2xl sm:text-3xl font-black tracking-tight leading-tight">
-                Hallo Lernheld! Ready für die nächste Mission? 🚀
+                Hallo Lernheld! 🚀
               </h1>
-              <p className="text-indigo-100 text-sm max-w-md leading-relaxed">
-                Übe Vokabeln, hör dir die Aussprache an und besiege das Vokabel-Monster im Bosskampf!
-              </p>
-            </div>
-
-            <div className="rounded-2xl bg-white/10 border border-white/10 p-3 backdrop-blur-sm max-w-md">
-              <div className="flex items-center justify-between text-[11px] uppercase tracking-[0.12em] text-indigo-100 font-bold mb-2">
-                <span>Heute</span>
-                <span>{progress.wordsPracticedToday}/{todayGoal}</span>
-              </div>
-              <div className="h-2.5 bg-white/10 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-gradient-to-r from-amber-300 via-orange-300 to-emerald-300 rounded-full transition-all duration-500"
-                  style={{ width: `${todayProgressPercent}%` }}
-                />
-              </div>
-              <div className="mt-2 text-sm font-semibold text-amber-100">
+              <p className="text-indigo-100 text-sm mt-1 leading-relaxed">
                 {nextMilestoneText}
-              </div>
+              </p>
             </div>
           </div>
 
-          <div className="bg-white/15 backdrop-blur-md rounded-2xl p-4 border border-white/20 shadow-inner shadow-white/10">
-            <div className="grid grid-cols-3 gap-3 text-center">
-              <div className="rounded-2xl bg-slate-950/10 p-3 border border-white/10">
-                <div className="text-2xl sm:text-3xl font-black text-amber-300">{progress.xp}</div>
-                <div className="text-[11px] text-indigo-100 font-semibold mt-1">XP</div>
-              </div>
-              <div className="rounded-2xl bg-slate-950/10 p-3 border border-white/10">
-                <div className="text-2xl sm:text-3xl font-black text-emerald-300">{masteryPercent}%</div>
-                <div className="text-[11px] text-indigo-100 font-semibold mt-1">Lernstand</div>
-              </div>
-              <div className="rounded-2xl bg-slate-950/10 p-3 border border-white/10">
-                <div className="text-2xl sm:text-3xl font-black text-pink-300">{progress.monsterDefeatedCount}</div>
-                <div className="text-[11px] text-indigo-100 font-semibold mt-1">Monster</div>
-              </div>
+          <div className="grid grid-cols-3 gap-2 min-w-[260px]">
+            <div className="rounded-2xl bg-slate-950/10 p-3 border border-white/10 text-center">
+              <div className="text-xl font-black text-amber-300">{progress.xp}</div>
+              <div className="text-[10px] text-indigo-100 font-semibold mt-1 uppercase tracking-wide">XP</div>
             </div>
-
-            <div className="mt-4 pt-4 border-t border-white/10">
-              <div className="flex items-center justify-between text-xs text-indigo-100 font-semibold">
-                <span>Aktuelles Level</span>
-                <span className="text-lg font-black text-white">{progress.level}</span>
-              </div>
-              <div className="mt-2 h-2 bg-white/10 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-gradient-to-r from-emerald-300 to-cyan-300 rounded-full transition-all duration-500"
-                  style={{ width: `${Math.min(100, masteryPercent)}%` }}
-                />
-              </div>
+            <div className="rounded-2xl bg-slate-950/10 p-3 border border-white/10 text-center">
+              <div className="text-xl font-black text-emerald-300">{masteryPercent}%</div>
+              <div className="text-[10px] text-indigo-100 font-semibold mt-1 uppercase tracking-wide">Fortschritt</div>
+            </div>
+            <div className="rounded-2xl bg-slate-950/10 p-3 border border-white/10 text-center">
+              <div className="text-xl font-black text-pink-300">{progress.monsterDefeatedCount}</div>
+              <div className="text-[10px] text-indigo-100 font-semibold mt-1 uppercase tracking-wide">Monster</div>
             </div>
           </div>
         </div>
 
-        <div className="relative z-10 mt-6 pt-5 border-t border-white/15">
-          <div className="flex items-center justify-between text-xs font-semibold mb-2">
-            <span className="text-indigo-100">5-Fächer-Kasten Fortschritt ({allWords.length} Vokabeln):</span>
-            <span className="text-amber-200">Fach 5 (Gekonnt): {masteredCount} Wörter</span>
+        <div className="relative z-10 mt-5 rounded-2xl bg-white/10 border border-white/10 p-3 backdrop-blur-sm">
+          <div className="flex items-center justify-between text-[11px] uppercase tracking-[0.12em] text-indigo-100 font-bold">
+            <span>Heute</span>
+            <span>{progress.wordsPracticedToday}/{todayGoal}</span>
+          </div>
+          <div className="mt-2 h-2.5 bg-white/10 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-gradient-to-r from-amber-300 via-orange-300 to-emerald-300 rounded-full transition-all duration-500"
+              style={{ width: `${todayProgressPercent}%` }}
+            />
+          </div>
+        </div>
+
+        <div className="relative z-10 mt-5 pt-4 border-t border-white/15">
+          <div className="flex items-center justify-between text-[11px] font-semibold mb-2 text-indigo-100">
+            <span>Leitner-Fortschritt</span>
+            <span>Fach 5: {masteredCount}</span>
           </div>
           <div className="grid grid-cols-5 gap-2">
             {boxCounts.map((count, idx) => (
               <div key={idx} className="bg-black/20 rounded-xl p-2 text-center border border-white/10">
-                <div className="text-xs font-medium text-indigo-200">Fach {idx + 1}</div>
-                <div className="text-lg font-black text-white">{count}</div>
+                <div className="text-[10px] font-medium text-indigo-200">{idx + 1}</div>
+                <div className="text-sm font-black text-white">{count}</div>
               </div>
             ))}
           </div>
@@ -185,37 +167,37 @@ export const Dashboard: React.FC<DashboardProps> = ({
             )}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-            <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
-              <div className="flex items-center gap-2 text-slate-500 text-xs font-bold uppercase tracking-wide">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="bg-white rounded-2xl border border-slate-200 p-3 shadow-sm">
+              <div className="flex items-center gap-2 text-slate-500 text-[10px] font-bold uppercase tracking-wide">
                 <UserPlus className="w-4 h-4 text-indigo-600" />
                 <span>Profile</span>
               </div>
-              <div className="mt-3 text-3xl font-black text-slate-800">{familyStats.length}</div>
+              <div className="mt-2 text-2xl font-black text-slate-800">{familyStats.length}</div>
             </div>
 
-            <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
-              <div className="flex items-center gap-2 text-slate-500 text-xs font-bold uppercase tracking-wide">
+            <div className="bg-white rounded-2xl border border-slate-200 p-3 shadow-sm">
+              <div className="flex items-center gap-2 text-slate-500 text-[10px] font-bold uppercase tracking-wide">
                 <Trophy className="w-4 h-4 text-amber-600" />
-                <span>Gesamt XP</span>
+                <span>XP</span>
               </div>
-              <div className="mt-3 text-3xl font-black text-slate-800">{totalFamilyXp}</div>
+              <div className="mt-2 text-2xl font-black text-slate-800">{totalFamilyXp}</div>
             </div>
 
-            <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
-              <div className="flex items-center gap-2 text-slate-500 text-xs font-bold uppercase tracking-wide">
+            <div className="bg-white rounded-2xl border border-slate-200 p-3 shadow-sm">
+              <div className="flex items-center gap-2 text-slate-500 text-[10px] font-bold uppercase tracking-wide">
                 <Flame className="w-4 h-4 text-orange-500" />
-                <span>Best Streak</span>
+                <span>Streak</span>
               </div>
-              <div className="mt-3 text-3xl font-black text-slate-800">{bestStreak} Tage</div>
+              <div className="mt-2 text-2xl font-black text-slate-800">{bestStreak}</div>
             </div>
 
-            <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
-              <div className="flex items-center gap-2 text-slate-500 text-xs font-bold uppercase tracking-wide">
+            <div className="bg-white rounded-2xl border border-slate-200 p-3 shadow-sm">
+              <div className="flex items-center gap-2 text-slate-500 text-[10px] font-bold uppercase tracking-wide">
                 <BookOpen className="w-4 h-4 text-emerald-600" />
                 <span>Wörter</span>
               </div>
-              <div className="mt-3 text-3xl font-black text-slate-800">{totalFamilyWords}</div>
+              <div className="mt-2 text-2xl font-black text-slate-800">{totalFamilyWords}</div>
             </div>
           </div>
 
@@ -263,22 +245,22 @@ export const Dashboard: React.FC<DashboardProps> = ({
                   </span>
 
                   <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500">
-                    {profile.mastery}% Meisterlevel
+                    {profile.mastery}%
                   </span>
                 </div>
 
-                <div className="mt-4 grid grid-cols-3 gap-2 text-center text-xs font-bold text-slate-600">
+                <div className="mt-4 grid grid-cols-3 gap-2 text-center text-[11px] font-bold text-slate-600">
                   <div className="bg-white/70 rounded-xl px-2 py-2 border border-white/60">
                     <div className="text-slate-500">Streak</div>
-                    <div className="text-base font-black text-slate-800">{profile.streak}</div>
+                    <div className="text-sm font-black text-slate-800">{profile.streak}</div>
                   </div>
                   <div className="bg-white/70 rounded-xl px-2 py-2 border border-white/60">
                     <div className="text-slate-500">Wörter</div>
-                    <div className="text-base font-black text-slate-800">{profile.totalWords}</div>
+                    <div className="text-sm font-black text-slate-800">{profile.totalWords}</div>
                   </div>
                   <div className="bg-white/70 rounded-xl px-2 py-2 border border-white/60">
                     <div className="text-slate-500">Monster</div>
-                    <div className="text-base font-black text-slate-800">{profile.monsters}</div>
+                    <div className="text-sm font-black text-slate-800">{profile.monsters}</div>
                   </div>
                 </div>
               </button>
