@@ -6,6 +6,7 @@ export interface VocabWord {
   exampleDe?: string;
   type?: 'noun' | 'verb' | 'adjective' | 'phrase' | 'other';
   box: number; // 1 to 5 (Leitner system)
+  isActive?: boolean; // false = staged, not yet available for learning
   lastPracticed?: string;
   correctCount: number;
   incorrectCount: number;

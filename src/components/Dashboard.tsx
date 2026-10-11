@@ -47,6 +47,38 @@ export const Dashboard: React.FC<DashboardProps> = ({
     ? 'Tagesziel erreicht!'
     : `${Math.max(0, todayGoal - progress.wordsPracticedToday)} Wörter bis zum Tagesziel`;
 
+  const heroStages = [
+    { name: 'Lernanfänger', icon: '🌱' },
+    { name: 'Wortkämpfer', icon: '⚔️' },
+    { name: 'Sprachheld', icon: '🛡️' },
+    { name: 'Vokabelritter', icon: '🏹' },
+    { name: 'Wortmagier', icon: '✨' },
+    { name: 'Missionar', icon: '🚀' },
+    { name: 'Sprachmeister', icon: '👑' },
+    { name: 'Wort-Wächter', icon: '🦁' },
+    { name: 'Elite-Held', icon: '🌟' },
+    { name: 'Legenden-Champion', icon: '🏆' },
+  ];
+
+  const currentStageIndex = Math.min(heroStages.length - 1, Math.floor((progress.level - 1) / 10));
+  const currentStage = heroStages[currentStageIndex];
+  const stageProgressIndex = ((progress.level - 1) % 10) + 1;
+  const stageProgressPercent = Math.round((stageProgressIndex / 10) * 100);
+  const levelsToNextStage = 10 - ((progress.level - 1) % 10);
+  const stageBadges = heroStages.map((stage, index) => ({
+    ...stage,
+    level: index * 10 + 1,
+    unlocked: progress.level >= index * 10 + 1,
+    isCurrent: index === currentStageIndex,
+  }));
+  const nextRewardStage = heroStages[Math.min(heroStages.length - 1, currentStageIndex + 1)];
+  const rewardHeadline = currentStageIndex === heroStages.length - 1
+    ? 'Letzte Auszeichnung erreicht!'
+    : `Neue Auszeichnung freigeschaltet: ${currentStage.name}`;
+  const nextRewardText = currentStageIndex === heroStages.length - 1
+    ? 'Abschluss erreicht'
+    : `Nächstes Ziel: ${nextRewardStage.name}`;
+
   const profilePalettes = {
     indigo: { card: 'linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%)', badge: '#eef2ff', badgeText: '#312e81', accent: '#4f46e5' },
     amber: { card: 'linear-gradient(135deg, #fff7ed 0%, #fef3c7 100%)', badge: '#fffbeb', badgeText: '#92400e', accent: '#f59e0b' },
@@ -91,8 +123,12 @@ export const Dashboard: React.FC<DashboardProps> = ({
             </div>
 
             <div>
-              <h1 className="text-2xl sm:text-3xl font-black tracking-tight leading-tight">
-                Hallo Lernheld! 🚀
+              <div className="inline-flex items-center gap-2 rounded-full bg-white/10 border border-white/10 px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-indigo-100">
+                <span>{currentStage.icon}</span>
+                <span>Heldenstufe {currentStageIndex + 1}</span>
+              </div>
+              <h1 className="text-2xl sm:text-3xl font-black tracking-tight leading-tight mt-2">
+                {currentStage.name}
               </h1>
               <p className="text-indigo-100 text-sm mt-1 leading-relaxed">
                 {nextMilestoneText}
@@ -116,16 +152,55 @@ export const Dashboard: React.FC<DashboardProps> = ({
           </div>
         </div>
 
-        <div className="relative z-10 mt-5 rounded-2xl bg-white/10 border border-white/10 p-3 backdrop-blur-sm">
-          <div className="flex items-center justify-between text-[11px] uppercase tracking-[0.12em] text-indigo-100 font-bold">
-            <span>Heute</span>
-            <span>{progress.wordsPracticedToday}/{todayGoal}</span>
+        <div className="relative z-10 mt-5 space-y-3">
+          <div className="rounded-2xl bg-white/10 border border-white/10 p-3 backdrop-blur-sm">
+            <div className="flex items-center justify-between text-[11px] uppercase tracking-[0.12em] text-indigo-100 font-bold">
+              <span>Heute</span>
+              <span>{progress.wordsPracticedToday}/{todayGoal}</span>
+            </div>
+            <div className="mt-2 h-2.5 bg-white/10 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-gradient-to-r from-amber-300 via-orange-300 to-emerald-300 rounded-full transition-all duration-500"
+                style={{ width: `${todayProgressPercent}%` }}
+              />
+            </div>
           </div>
-          <div className="mt-2 h-2.5 bg-white/10 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-gradient-to-r from-amber-300 via-orange-300 to-emerald-300 rounded-full transition-all duration-500"
-              style={{ width: `${todayProgressPercent}%` }}
-            />
+
+          <div className="rounded-2xl bg-white/10 border border-white/10 p-3 backdrop-blur-sm">
+            <div className="flex items-center justify-between text-[11px] uppercase tracking-[0.12em] text-indigo-100 font-bold">
+              <span>Heldenfortschritt</span>
+              <span>{stageProgressIndex}/10 Level</span>
+            </div>
+            <div className="mt-2 h-2.5 bg-white/10 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-gradient-to-r from-amber-300 via-orange-300 to-emerald-300 rounded-full transition-all duration-500"
+                style={{ width: `${stageProgressPercent}%` }}
+              />
+            </div>
+            <div className="mt-2 text-sm font-semibold text-amber-100">
+              {levelsToNextStage} Level bis zur nächsten Heldenstufe
+            </div>
+          </div>
+        </div>
+
+        <div className="relative z-10 mt-5 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <div className="rounded-2xl bg-white/10 border border-white/10 p-3 backdrop-blur-sm flex-1">
+            <div className="text-[10px] font-black uppercase tracking-[0.18em] text-indigo-100">Neue Auszeichnung</div>
+            <div className="mt-2 text-lg font-black text-white">{rewardHeadline}</div>
+          </div>
+
+          <div className="rounded-2xl bg-gradient-to-r from-amber-300 to-orange-300 text-slate-900 p-3 shadow-lg shadow-amber-500/20 min-w-[220px]">
+            <div className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-700">Belohnung</div>
+            <div className="mt-2 flex items-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/70 text-2xl shadow-sm">
+                {currentStage.icon}
+              </div>
+              <div>
+                <div className="text-sm font-black">{currentStage.name}</div>
+                <div className="text-[11px] font-semibold text-slate-700">Level {progress.level}</div>
+                <div className="text-[10px] font-bold uppercase tracking-[0.12em] text-slate-700">{nextRewardText}</div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -139,6 +214,28 @@ export const Dashboard: React.FC<DashboardProps> = ({
               <div key={idx} className="bg-black/20 rounded-xl p-2 text-center border border-white/10">
                 <div className="text-[10px] font-medium text-indigo-200">{idx + 1}</div>
                 <div className="text-sm font-black text-white">{count}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="relative z-10 mt-5">
+          <div className="flex items-center justify-between text-[11px] font-black uppercase tracking-[0.18em] text-indigo-100 mb-2">
+            <span>Badges</span>
+            <span>{currentStageIndex + 1}/{heroStages.length}</span>
+          </div>
+
+          <div className="grid grid-cols-5 gap-2 sm:grid-cols-10">
+            {stageBadges.map((badge) => (
+              <div
+                key={badge.name}
+                className={`rounded-2xl border p-2 text-center transition-all ${
+                  badge.unlocked
+                    ? 'border-white/20 bg-white/10 text-white shadow-sm'
+                    : 'border-white/10 bg-slate-950/10 text-indigo-200/70'
+                } ${badge.isCurrent ? 'ring-2 ring-amber-300/70' : ''}`}
+              >
+                <div className="text-xl">{badge.icon}</div>
+                <div className="mt-1 text-[9px] font-black uppercase tracking-wide">{badge.level}</div>
               </div>
             ))}
           </div>

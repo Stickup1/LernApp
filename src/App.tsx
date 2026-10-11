@@ -235,11 +235,14 @@ export const App: React.FC = () => {
 
   // Get active word pool for current selected unit
   const activeWords: VocabWord[] = 
-    selectedUnitId === 'all'
+    (selectedUnitId === 'all'
       ? units.flatMap(u => u.words)
-      : units.find(u => u.id === selectedUnitId)?.words || [];
+      : units.find(u => u.id === selectedUnitId)?.words || [])
+      .filter(word => word.isActive !== false);
 
-  const allWordsPool: VocabWord[] = units.flatMap(u => u.words);
+  const allWordsPool: VocabWord[] = units
+    .flatMap(u => u.words)
+    .filter(word => word.isActive !== false);
 
   const handleSelectMode = (mode: LearningMode) => {
     setCurrentMode(mode);

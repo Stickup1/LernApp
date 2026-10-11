@@ -75,6 +75,7 @@ export const VocabManager: React.FC<VocabManagerProps> = ({
             de,
             exampleEn: example,
             box: 1,
+            isActive: false,
             correctCount: 0,
             incorrectCount: 0,
           });
@@ -149,6 +150,7 @@ export const VocabManager: React.FC<VocabManagerProps> = ({
       de: manualDe.trim(),
       exampleEn: manualExample.trim() || undefined,
       box: 1,
+      isActive: false,
       correctCount: 0,
       incorrectCount: 0,
     };
@@ -234,6 +236,7 @@ export const VocabManager: React.FC<VocabManagerProps> = ({
       en: entry.en.trim(),
       de: entry.de.trim(),
       box: 1,
+      isActive: false,
       correctCount: 0,
       incorrectCount: 0,
     }));
@@ -248,6 +251,40 @@ export const VocabManager: React.FC<VocabManagerProps> = ({
     setOcrEntries([]);
     setOcrImageUrl(null);
     setOcrError(null);
+  };
+
+  const handleToggleWordActive = (wordId: string, nextActive: boolean) => {
+    if (!currentUnit) return;
+
+    const updated = units.map(u => {
+      if (u.id !== currentUnit.id) return u;
+
+      return {
+        ...u,
+        words: u.words.map(w =>
+          w.id === wordId ? { ...w, isActive: nextActive } : w
+        ),
+      };
+    });
+
+    onSaveUnits(updated);
+  };
+
+  const handleActivateAllStagedWords = () => {
+    if (!currentUnit) return;
+
+    const updated = units.map(u => {
+      if (u.id !== currentUnit.id) return u;
+
+      return {
+        ...u,
+        words: u.words.map(word =>
+          word.isActive === false ? { ...word, isActive: true } : word
+        ),
+      };
+    });
+
+    onSaveUnits(updated);
   };
 
   // 4. Delete Word Handler
@@ -370,6 +407,10 @@ export const VocabManager: React.FC<VocabManagerProps> = ({
       };
     }
   };
+
+  const stagedWords = currentUnit?.words.filter(word => word.isActive === false) ?? [];
+  const activeWords = currentUnit?.words.filter(word => word.isActive !== false) ?? [];
+  const totalWordsInUnit = currentUnit?.words.length ?? 0;
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
@@ -709,85 +750,163 @@ export const VocabManager: React.FC<VocabManagerProps> = ({
                 </button>
               </div>
 
+              <div className="flex flex-wrap gap-2">
+                <span className="rounded-full bg-amber-100 px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-amber-800">
+                  Vorbereitung: {stagedWords.length}
+                </span>
+                <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-emerald-800">
+                  Freigeschaltet: {activeWords.length}
+                </span>
+                <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-black uppercase tracking-wide text-slate-700">
+                  Gesamt: {totalWordsInUnit}
+                </span>
+              </div>
+
               {/* Words list table */}
-              <div className="divide-y divide-slate-100 max-h-96 overflow-y-auto">
+              <div className="space-y-4 max-h-96 overflow-y-auto pr-1">
                 {currentUnit?.words.length === 0 ? (
                   <div className="text-center py-8 text-sm text-slate-400">
                     Noch keine Vokabeln in dieser Unit vorhanden.
                   </div>
                 ) : (
-                  currentUnit?.words.map(w => {
-                    const isEditing = editingWordId === w.id;
+                  <>
+                    <div className="rounded-2xl border border-amber-200 bg-amber-50 p-3">
+                      <div className="flex items-center justify-between gap-2 mb-2">
+                        <h4 className="text-xs font-black uppercase tracking-wide text-amber-700">Staging Area</h4>
+                        <span className="text-[10px] font-bold text-amber-700">{stagedWords.length} vorbereitet</span>
+                      </div>
 
-                    return (
-                      <div key={w.id} className="py-2.5 space-y-2">
-                        {isEditing ? (
-                          <form onSubmit={handleSaveEditedWord} className="space-y-2 rounded-2xl border border-indigo-200 bg-indigo-50 p-3">
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                              <input
-                                type="text"
-                                value={editEn}
-                                onChange={e => setEditEn(e.target.value)}
-                                className="w-full p-2 bg-white border border-slate-300 rounded-xl text-sm"
-                                placeholder="Englisch"
-                              />
-                              <input
-                                type="text"
-                                value={editDe}
-                                onChange={e => setEditDe(e.target.value)}
-                                className="w-full p-2 bg-white border border-slate-300 rounded-xl text-sm"
-                                placeholder="Deutsch"
-                              />
-                            </div>
-                            <input
-                              type="text"
-                              value={editExample}
-                              onChange={e => setEditExample(e.target.value)}
-                              className="w-full p-2 bg-white border border-slate-300 rounded-xl text-sm"
-                              placeholder="Beispielsatz (optional)"
-                            />
-                            <div className="flex items-center justify-end gap-2">
-                              <button
-                                type="button"
-                                onClick={handleCancelEditWord}
-                                className="px-3 py-1.5 text-xs font-bold text-slate-600 hover:text-slate-800"
-                              >
-                                Abbrechen
-                              </button>
-                              <button
-                                type="submit"
-                                className="px-3 py-1.5 text-xs font-bold text-white bg-indigo-600 rounded-xl hover:bg-indigo-700"
-                              >
-                                Speichern
-                              </button>
-                            </div>
-                          </form>
-                        ) : (
-                          <div className="flex items-center justify-between gap-4">
-                            <div className="flex-1 min-w-0">
-                              <div className="font-extrabold text-slate-800 text-sm truncate">{w.en}</div>
-                              <div className="text-xs text-slate-500 truncate">{w.de}</div>
-                            </div>
-                            <div className="text-xs font-bold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 whitespace-nowrap">
-                              Kasten-Fach {w.box || 1}
-                            </div>
-                            <button
-                              onClick={() => handleStartEditWord(w)}
-                              className="px-2 py-1 text-xs font-bold text-indigo-700 bg-indigo-100 hover:bg-indigo-200 rounded-lg transition-colors"
-                            >
-                              Bearbeiten
-                            </button>
-                            <button
-                              onClick={() => handleDeleteWord(w.id)}
-                              className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg transition-colors"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
+                      {stagedWords.length === 0 ? (
+                        <div className="text-xs text-amber-700/70">Keine neuen Wörter in Vorbereitung.</div>
+                      ) : (
+                        <div className="space-y-3">
+                          <button
+                            type="button"
+                            onClick={handleActivateAllStagedWords}
+                            className="w-full rounded-xl bg-emerald-600 px-3 py-2 text-[11px] font-black uppercase tracking-wide text-white hover:bg-emerald-700"
+                          >
+                            Alle freischalten
+                          </button>
+
+                          <div className="space-y-2">
+                            {stagedWords.map(w => (
+                              <div key={w.id} className="rounded-xl border border-amber-200 bg-white p-2.5 flex items-center justify-between gap-3">
+                                <div className="min-w-0 flex-1">
+                                  <div className="font-extrabold text-slate-800 text-sm truncate">{w.en}</div>
+                                  <div className="text-xs text-slate-500 truncate">{w.de}</div>
+                                </div>
+                                <div className="flex items-center gap-2 shrink-0">
+                                  <span className="text-[10px] font-bold px-2 py-1 rounded-full bg-amber-100 text-amber-700">Vorbereitung</span>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleToggleWordActive(w.id, true)}
+                                    className="px-2 py-1 text-[10px] font-bold text-white bg-emerald-600 rounded-lg hover:bg-emerald-700"
+                                  >
+                                    Freischalten
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
                           </div>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
+                      <div className="flex items-center justify-between gap-2 mb-2">
+                        <h4 className="text-xs font-black uppercase tracking-wide text-slate-700">Freigeschaltet</h4>
+                        <span className="text-[10px] font-bold text-slate-600">{activeWords.length} aktiv</span>
+                      </div>
+
+                      <div className="space-y-2">
+                        {activeWords.length === 0 ? (
+                          <div className="text-xs text-slate-500">Noch keine Wörter freigeschaltet.</div>
+                        ) : (
+                          activeWords.map(w => {
+                            const isEditing = editingWordId === w.id;
+
+                            return (
+                              <div key={w.id} className="rounded-xl border border-slate-200 bg-white p-2.5 space-y-2">
+                                {isEditing ? (
+                                  <form onSubmit={handleSaveEditedWord} className="space-y-2 rounded-2xl border border-indigo-200 bg-indigo-50 p-3">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                      <input
+                                        type="text"
+                                        value={editEn}
+                                        onChange={e => setEditEn(e.target.value)}
+                                        className="w-full p-2 bg-white border border-slate-300 rounded-xl text-sm"
+                                        placeholder="Englisch"
+                                      />
+                                      <input
+                                        type="text"
+                                        value={editDe}
+                                        onChange={e => setEditDe(e.target.value)}
+                                        className="w-full p-2 bg-white border border-slate-300 rounded-xl text-sm"
+                                        placeholder="Deutsch"
+                                      />
+                                    </div>
+                                    <input
+                                      type="text"
+                                      value={editExample}
+                                      onChange={e => setEditExample(e.target.value)}
+                                      className="w-full p-2 bg-white border border-slate-300 rounded-xl text-sm"
+                                      placeholder="Beispielsatz (optional)"
+                                    />
+                                    <div className="flex items-center justify-end gap-2">
+                                      <button
+                                        type="button"
+                                        onClick={handleCancelEditWord}
+                                        className="px-3 py-1.5 text-xs font-bold text-slate-600 hover:text-slate-800"
+                                      >
+                                        Abbrechen
+                                      </button>
+                                      <button
+                                        type="submit"
+                                        className="px-3 py-1.5 text-xs font-bold text-white bg-indigo-600 rounded-xl hover:bg-indigo-700"
+                                      >
+                                        Speichern
+                                      </button>
+                                    </div>
+                                  </form>
+                                ) : (
+                                  <div className="flex items-center justify-between gap-3">
+                                    <div className="flex-1 min-w-0">
+                                      <div className="font-extrabold text-slate-800 text-sm truncate">{w.en}</div>
+                                      <div className="text-xs text-slate-500 truncate">{w.de}</div>
+                                    </div>
+                                    <div className="flex items-center gap-2 shrink-0">
+                                      <div className="text-[10px] font-bold px-2 py-1 rounded-full bg-indigo-100 text-indigo-700 whitespace-nowrap">
+                                        Kasten-Fach {w.box || 1}
+                                      </div>
+                                      <button
+                                        type="button"
+                                        onClick={() => handleToggleWordActive(w.id, false)}
+                                        className="px-2 py-1 text-[10px] font-bold text-slate-700 bg-slate-100 rounded-lg hover:bg-slate-200"
+                                      >
+                                        Zurücksetzen
+                                      </button>
+                                      <button
+                                        onClick={() => handleStartEditWord(w)}
+                                        className="px-2 py-1 text-xs font-bold text-indigo-700 bg-indigo-100 hover:bg-indigo-200 rounded-lg transition-colors"
+                                      >
+                                        Bearbeiten
+                                      </button>
+                                      <button
+                                        onClick={() => handleDeleteWord(w.id)}
+                                        className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg transition-colors"
+                                      >
+                                        <Trash2 className="w-4 h-4" />
+                                      </button>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })
                         )}
                       </div>
-                    );
-                  })
+                    </div>
+                  </>
                 )}
               </div>
             </div>
