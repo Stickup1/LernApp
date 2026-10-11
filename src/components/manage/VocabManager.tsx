@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
+import Tesseract from 'tesseract.js';
 import { VocabUnit, VocabWord } from '../../types/vocab';
-import { Plus, Trash2, Download, Upload, ArrowLeft, FileText, Sparkles, BookPlus, Lock } from 'lucide-react';
+import { Plus, Trash2, Download, Upload, ArrowLeft, FileText, Sparkles, BookPlus, Lock, ImageUp } from 'lucide-react';
 import { hasParentPassword, removeParentPassword } from '../../services/auth';
 
 interface VocabManagerProps {
@@ -30,6 +31,18 @@ export const VocabManager: React.FC<VocabManagerProps> = ({
   // New unit state
   const [newUnitTitle, setNewUnitTitle] = useState('');
   const [newUnitIcon, setNewUnitIcon] = useState('📘');
+
+  // OCR image import state
+  const [ocrImageUrl, setOcrImageUrl] = useState<string | null>(null);
+  const [ocrEntries, setOcrEntries] = useState<Array<{ id: string; en: string; de: string }>>([]);
+  const [isOcrLoading, setIsOcrLoading] = useState(false);
+  const [ocrError, setOcrError] = useState<string | null>(null);
+
+  // Edit word state
+  const [editingWordId, setEditingWordId] = useState<string | null>(null);
+  const [editEn, setEditEn] = useState('');
+  const [editDe, setEditDe] = useState('');
+  const [editExample, setEditExample] = useState('');
 
   const currentUnit = units.find(u => u.id === selectedUnitId) || units[0];
 
@@ -156,7 +169,88 @@ export const VocabManager: React.FC<VocabManagerProps> = ({
     setManualExample('');
   };
 
-  // 3. Delete Word Handler
+  const parseOcrTextToPairs = (rawText: string): Array<{ id: string; en: string; de: string }> => {
+    const lines = rawText
+      .split(/\r?\n/)
+      .map(line => line.replace(/^\s*[-•*\d.]+\s*/, '').trim())
+      .filter(Boolean);
+
+    const knownSplitters = [';', ' - ', ' – ', ' — ', ' = ', ' : ', ' -> ', '\t'];
+    const pairs: Array<{ id: string; en: string; de: string }> = [];
+
+    lines.forEach((line, index) => {
+      let normalized = line;
+      const delimiter = knownSplitters.find(separator => normalized.includes(separator));
+
+      if (!delimiter) return;
+
+      const parts = normalized.split(delimiter);
+      const en = parts[0]?.trim();
+      const de = parts.slice(1).join(delimiter).trim();
+
+      if (en && de) {
+        pairs.push({ id: `ocr_${Date.now()}_${index}`, en, de });
+      }
+    });
+
+    return pairs;
+  };
+
+  const handleOcrImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsOcrLoading(true);
+    setOcrError(null);
+    setOcrEntries([]);
+    setOcrImageUrl(URL.createObjectURL(file));
+
+    try {
+      const result = await Tesseract.recognize(file, 'eng', {
+        logger: () => undefined,
+      });
+
+      const parsed = parseOcrTextToPairs(result.data.text);
+
+      if (parsed.length === 0) {
+        setOcrError('Es wurden keine passenden Vokabelpaare erkannt. Bitte ein klareres Foto mit Text in „Englisch; Deutsch“-Format hochladen.');
+        return;
+      }
+
+      setOcrEntries(parsed);
+    } catch (error) {
+      console.error('OCR failed', error);
+      setOcrError('Die Texterkennung war nicht erfolgreich. Bitte versuche ein klareres Foto oder einen anderen Scan.');
+    } finally {
+      setIsOcrLoading(false);
+    }
+  };
+
+  const handleImportOcrEntries = () => {
+    if (!currentUnit || ocrEntries.length === 0) return;
+
+    const newWords: VocabWord[] = ocrEntries.map(entry => ({
+      id: `ocr_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+      en: entry.en.trim(),
+      de: entry.de.trim(),
+      box: 1,
+      correctCount: 0,
+      incorrectCount: 0,
+    }));
+
+    const updated = units.map(u =>
+      u.id === currentUnit.id
+        ? { ...u, words: [...u.words, ...newWords] }
+        : u
+    );
+
+    onSaveUnits(updated);
+    setOcrEntries([]);
+    setOcrImageUrl(null);
+    setOcrError(null);
+  };
+
+  // 4. Delete Word Handler
   const handleDeleteWord = (wordId: string) => {
     if (!currentUnit) return;
     const updated = units.map(u => {
@@ -171,7 +265,51 @@ export const VocabManager: React.FC<VocabManagerProps> = ({
     onSaveUnits(updated);
   };
 
-  // 4. Create New Unit
+  // 4. Edit Word Handler
+  const handleStartEditWord = (word: VocabWord) => {
+    setEditingWordId(word.id);
+    setEditEn(word.en);
+    setEditDe(word.de);
+    setEditExample(word.exampleEn || '');
+  };
+
+  const handleSaveEditedWord = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!currentUnit || !editingWordId || !editEn.trim() || !editDe.trim()) return;
+
+    const updated = units.map(u => {
+      if (u.id !== currentUnit.id) return u;
+
+      return {
+        ...u,
+        words: u.words.map(w =>
+          w.id === editingWordId
+            ? {
+                ...w,
+                en: editEn.trim(),
+                de: editDe.trim(),
+                exampleEn: editExample.trim() || undefined,
+              }
+            : w
+        ),
+      };
+    });
+
+    onSaveUnits(updated);
+    setEditingWordId(null);
+    setEditEn('');
+    setEditDe('');
+    setEditExample('');
+  };
+
+  const handleCancelEditWord = () => {
+    setEditingWordId(null);
+    setEditEn('');
+    setEditDe('');
+    setEditExample('');
+  };
+
+  // 5. Create New Unit
   const handleCreateUnit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newUnitTitle.trim()) return;
@@ -354,6 +492,62 @@ export const VocabManager: React.FC<VocabManagerProps> = ({
             />
           </div>
 
+          <div className="rounded-2xl border-2 border-dashed border-indigo-200 bg-indigo-50/50 p-4 space-y-4">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <h3 className="text-sm font-black text-slate-800">Foto hochladen und OCR importieren</h3>
+                <p className="text-xs text-slate-500">Mehrere Vokabeln aus einem Foto oder Screenshot erkennen.</p>
+              </div>
+              <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-indigo-600 px-3 py-2 text-xs font-bold text-white shadow-sm hover:bg-indigo-700">
+                <ImageUp className="w-4 h-4" />
+                <span>Bild auswählen</span>
+                <input type="file" accept="image/*" onChange={handleOcrImageUpload} className="hidden" />
+              </label>
+            </div>
+
+            {isOcrLoading && (
+              <div className="rounded-xl border border-indigo-200 bg-white px-3 py-2 text-sm font-semibold text-indigo-700">
+                Texterkennung läuft…
+              </div>
+            )}
+
+            {ocrError && (
+              <div className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700">
+                {ocrError}
+              </div>
+            )}
+
+            {ocrImageUrl && (
+              <div className="space-y-3">
+                <img src={ocrImageUrl} alt="OCR Preview" className="max-h-52 w-full rounded-2xl object-contain border border-slate-200 bg-white" />
+
+                {ocrEntries.length > 0 && (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-xs font-bold uppercase tracking-wide text-slate-600">Erkannte Vokabeln</h4>
+                      <button
+                        type="button"
+                        onClick={handleImportOcrEntries}
+                        className="rounded-xl bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-emerald-700"
+                      >
+                        In Unit übernehmen
+                      </button>
+                    </div>
+
+                    <div className="max-h-40 space-y-2 overflow-y-auto pr-1">
+                      {ocrEntries.map(entry => (
+                        <div key={entry.id} className="rounded-xl border border-slate-200 bg-white p-2">
+                          <div className="text-sm font-extrabold text-slate-800">{entry.en}</div>
+                          <div className="text-xs text-slate-500">{entry.de}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
           {importNotice && (
             <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-800 text-sm font-bold">
               {importNotice}
@@ -522,23 +716,78 @@ export const VocabManager: React.FC<VocabManagerProps> = ({
                     Noch keine Vokabeln in dieser Unit vorhanden.
                   </div>
                 ) : (
-                  currentUnit?.words.map(w => (
-                    <div key={w.id} className="py-2.5 flex items-center justify-between gap-4">
-                      <div className="flex-1">
-                        <div className="font-extrabold text-slate-800 text-sm">{w.en}</div>
-                        <div className="text-xs text-slate-500">{w.de}</div>
+                  currentUnit?.words.map(w => {
+                    const isEditing = editingWordId === w.id;
+
+                    return (
+                      <div key={w.id} className="py-2.5 space-y-2">
+                        {isEditing ? (
+                          <form onSubmit={handleSaveEditedWord} className="space-y-2 rounded-2xl border border-indigo-200 bg-indigo-50 p-3">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                              <input
+                                type="text"
+                                value={editEn}
+                                onChange={e => setEditEn(e.target.value)}
+                                className="w-full p-2 bg-white border border-slate-300 rounded-xl text-sm"
+                                placeholder="Englisch"
+                              />
+                              <input
+                                type="text"
+                                value={editDe}
+                                onChange={e => setEditDe(e.target.value)}
+                                className="w-full p-2 bg-white border border-slate-300 rounded-xl text-sm"
+                                placeholder="Deutsch"
+                              />
+                            </div>
+                            <input
+                              type="text"
+                              value={editExample}
+                              onChange={e => setEditExample(e.target.value)}
+                              className="w-full p-2 bg-white border border-slate-300 rounded-xl text-sm"
+                              placeholder="Beispielsatz (optional)"
+                            />
+                            <div className="flex items-center justify-end gap-2">
+                              <button
+                                type="button"
+                                onClick={handleCancelEditWord}
+                                className="px-3 py-1.5 text-xs font-bold text-slate-600 hover:text-slate-800"
+                              >
+                                Abbrechen
+                              </button>
+                              <button
+                                type="submit"
+                                className="px-3 py-1.5 text-xs font-bold text-white bg-indigo-600 rounded-xl hover:bg-indigo-700"
+                              >
+                                Speichern
+                              </button>
+                            </div>
+                          </form>
+                        ) : (
+                          <div className="flex items-center justify-between gap-4">
+                            <div className="flex-1 min-w-0">
+                              <div className="font-extrabold text-slate-800 text-sm truncate">{w.en}</div>
+                              <div className="text-xs text-slate-500 truncate">{w.de}</div>
+                            </div>
+                            <div className="text-xs font-bold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 whitespace-nowrap">
+                              Kasten-Fach {w.box || 1}
+                            </div>
+                            <button
+                              onClick={() => handleStartEditWord(w)}
+                              className="px-2 py-1 text-xs font-bold text-indigo-700 bg-indigo-100 hover:bg-indigo-200 rounded-lg transition-colors"
+                            >
+                              Bearbeiten
+                            </button>
+                            <button
+                              onClick={() => handleDeleteWord(w.id)}
+                              className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg transition-colors"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        )}
                       </div>
-                      <div className="text-xs font-bold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700">
-                        Kasten-Fach {w.box || 1}
-                      </div>
-                      <button
-                        onClick={() => handleDeleteWord(w.id)}
-                        className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg transition-colors"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  ))
+                    );
+                  })
                 )}
               </div>
             </div>
