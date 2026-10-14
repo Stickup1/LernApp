@@ -4,6 +4,7 @@ import { ArrowLeft, RotateCcw, Volume2, Sparkles } from 'lucide-react';
 import { speakEnglish } from '../../services/speech';
 import { playSound } from '../../services/audio';
 import { triggerConfetti } from '../../services/confetti';
+import { shuffleItems } from '../../services/random';
 
 interface ScrambleModeProps {
   words: VocabWord[];
@@ -46,12 +47,23 @@ export const ScrambleMode: React.FC<ScrambleModeProps> = ({
       isUsed: false,
     }));
 
-    setAvailableTiles([...tiles].sort(() => Math.random() - 0.5));
+    setAvailableTiles(shuffleItems(tiles));
     setSelectedTiles([]);
     setIsSuccess(false);
-  }, [currentIndex, currentWord]);
+  }, [currentIndex, currentWord?.id]);
 
-  if (!currentWord) return null;
+  if (!currentWord) {
+    return (
+      <div className="max-w-md mx-auto py-16 px-4 text-center">
+        <div className="text-5xl mb-4">📭</div>
+        <h2 className="text-xl font-bold text-slate-800">Keine Vokabeln vorhanden</h2>
+        <p className="text-sm text-slate-500 mt-2">Bitte wähle eine Unit mit freigeschalteten Wörtern.</p>
+        <button onClick={onExit} className="mt-6 px-6 py-2.5 bg-indigo-600 text-white font-bold rounded-2xl shadow-md hover:bg-indigo-700">
+          Zurück
+        </button>
+      </div>
+    );
+  }
 
   const currentConstructedWord = selectedTiles.map(t => t.char).join('');
   const targetWord = currentWord.en;

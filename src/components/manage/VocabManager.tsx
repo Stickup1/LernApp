@@ -368,13 +368,16 @@ export const VocabManager: React.FC<VocabManagerProps> = ({
 
   // 5. Delete Unit
   const handleDeleteUnit = (unitId: string) => {
-    if (units.length <= 1) {
-      alert('Es muss mindestens eine Einheit vorhanden bleiben.');
+    const unitToDelete = units.find(unit => unit.id === unitId);
+    if (!unitToDelete) return;
+
+    if (units.length === 1 && unitToDelete.words.length > 0) {
+      alert('Die letzte Unit enthält noch Vokabeln und kann deshalb nicht gelöscht werden.');
       return;
     }
     const updated = units.filter(u => u.id !== unitId);
     onSaveUnits(updated);
-    setSelectedUnitId(updated[0].id);
+    setSelectedUnitId(updated[0]?.id || '');
   };
 
   // 6. JSON Export

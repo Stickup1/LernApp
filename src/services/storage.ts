@@ -72,11 +72,25 @@ export const getStoredProfiles = (): LearnerProfile[] => {
       return [fallbackProfile];
     }
 
-    return (parsed as LearnerProfile[]).map((profile, index) => ({
-      ...profile,
-      avatar: profile.avatar || getSafeProfileAvatar(profile.name || 'Lernheld', index),
-      accentColor: profile.accentColor || getSafeProfileAccent(profile.name || 'Lernheld', index),
-    }));
+    const today = new Date().toISOString().split('T')[0];
+    const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+
+    return (parsed as LearnerProfile[]).map((profile, index) => {
+      const progress = { ...INITIAL_PROGRESS, ...profile.progress };
+
+      if (progress.lastActiveDate !== today) {
+        progress.streakDays = progress.lastActiveDate === yesterday ? progress.streakDays + 1 : 1;
+        progress.lastActiveDate = today;
+        progress.wordsPracticedToday = 0;
+      }
+
+      return {
+        ...profile,
+        progress,
+        avatar: profile.avatar || getSafeProfileAvatar(profile.name || 'Lernheld', index),
+        accentColor: profile.accentColor || getSafeProfileAccent(profile.name || 'Lernheld', index),
+      };
+    });
   } catch (e) {
     console.error('Failed to load profiles from localStorage', e);
     const fallbackProfile = createProfile('Lernheld');
@@ -147,6 +161,6 @@ export const saveStoredProgress = (progress: UserProgress): void => {
   }
 };
 
-export const getXpForNextLevel = (currentLevel: number): number => {
-  return currentLevel * 120;
+export const getXpForNextLevel = (_currentLevel: number): number => {
+  return 120;
 };

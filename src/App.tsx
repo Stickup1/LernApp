@@ -1,19 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { VocabUnit, UserProgress, LearningMode, VocabWord, EnglishAccent, LearnerProfile } from './types/vocab';
+import { VocabUnit, LearningMode, VocabWord, EnglishAccent, LearnerProfile } from './types/vocab';
 import {
   getStoredProfiles,
   saveStoredProfiles,
   createProfile,
-  getStoredUnits,
-  saveStoredUnits,
-  getStoredProgress,
-  saveStoredProgress,
   INITIAL_PROGRESS,
 } from './services/storage';
 import { Navbar } from './components/Navbar';
 import { Dashboard } from './components/Dashboard';
 import { FlashcardMode } from './components/flashcard/FlashcardMode';
-import { QuizMode } from './components/quiz/QuizMode';
+import { MemoryMode } from './components/memory/MemoryMode';
 import { ScrambleMode } from './components/scramble/ScrambleMode';
 import { WritingMode } from './components/writing/WritingMode';
 import { MonsterQuest } from './components/monster/MonsterQuest';
@@ -24,117 +20,94 @@ import { triggerConfetti } from './services/confetti';
 export const App: React.FC = () => {
   const initialProfiles = getStoredProfiles();
   const [profiles, setProfiles] = useState<LearnerProfile[]>(initialProfiles);
-  const [activeProfileId, setActiveProfileId] = useState<string>(initialProfiles[0]?.id ?? createProfile('Lernheld').id);
+  const [activeProfileId, setActiveProfileId] = useState<string>(initialProfiles[0].id);
   const [selectedUnitId, setSelectedUnitId] = useState<string>('all');
   const [currentMode, setCurrentMode] = useState<LearningMode>('dashboard');
   const importInputRef = useRef<HTMLInputElement | null>(null);
 
   const activeProfile = profiles.find(profile => profile.id === activeProfileId) ?? profiles[0];
-  const [units, setUnits] = useState<VocabUnit[]>(() => activeProfile?.units ?? getStoredUnits());
-  const [progress, setProgress] = useState<UserProgress>(() => activeProfile?.progress ?? getStoredProgress());
+  const units = activeProfile?.units ?? [];
+  const progress = activeProfile?.progress ?? INITIAL_PROGRESS;
 
   useEffect(() => {
-    if (!activeProfile) return;
-    setUnits(activeProfile.units);
-    setProgress(activeProfile.progress);
     setSelectedUnitId('all');
   }, [activeProfileId]);
 
-  useEffect(() => {
-    if (!activeProfileId || profiles.length === 0) return;
-    setProfiles(prevProfiles =>
-      prevProfiles.map(profile =>
-        profile.id === activeProfileId ? { ...profile, units, progress } : profile
-      )
-    );
-  }, [units, progress, activeProfileId]);
+  const updateActiveProfile = (update: (profile: LearnerProfile) => LearnerProfile) => {
+    setProfiles(prevProfiles => prevProfiles.map(profile =>
+      profile.id === activeProfileId ? update(profile) : profile
+    ));
+  };
 
   useEffect(() => {
     saveStoredProfiles(profiles);
   }, [profiles]);
 
-  useEffect(() => {
-    saveStoredProgress(progress);
-  }, [progress]);
-
   // Handle XP addition and Level up check
   const handleAddXp = (amount: number) => {
-    setProgress(prev => {
-      const nextXp = prev.xp + amount;
-      const calculatedLevel = Math.floor(nextXp / 120) + 1;
-      const isLevelUp = calculatedLevel > prev.level;
+    const nextXp = progress.xp + amount;
+    const calculatedLevel = Math.floor(nextXp / 120) + 1;
 
-      if (isLevelUp) {
-        playSound('levelup', prev.soundEnabled);
-        triggerConfetti();
-      }
+    if (calculatedLevel > progress.level) {
+      playSound('levelup', progress.soundEnabled);
+      triggerConfetti();
+    }
 
-      return {
-        ...prev,
+    updateActiveProfile(profile => ({
+      ...profile,
+      progress: {
+        ...profile.progress,
         xp: nextXp,
         level: calculatedLevel,
-        wordsPracticedToday: prev.wordsPracticedToday + 1,
-      };
-    });
+        wordsPracticedToday: profile.progress.wordsPracticedToday + 1,
+      },
+    }));
   };
 
   const handleToggleSound = () => {
-    setProgress(prev => ({
-      ...prev,
-      soundEnabled: !prev.soundEnabled,
+    updateActiveProfile(profile => ({
+      ...profile,
+      progress: { ...profile.progress, soundEnabled: !profile.progress.soundEnabled },
     }));
   };
 
   const handleChangeVoiceAccent = (voiceAccent: EnglishAccent) => {
-    setProgress(prev => ({
-      ...prev,
-      voiceAccent,
+    updateActiveProfile(profile => ({
+      ...profile,
+      progress: { ...profile.progress, voiceAccent },
     }));
   };
 
   const handleUpdateWordBox = (wordId: string, newBox: number, isCorrect: boolean) => {
-    setUnits(prevUnits => {
-      const updated = prevUnits.map(unit => ({
+    updateActiveProfile(profile => ({
+      ...profile,
+      units: profile.units.map(unit => ({
         ...unit,
-        words: unit.words.map(w => {
-          if (w.id === wordId) {
-            return {
-              ...w,
+        words: unit.words.map(word => word.id === wordId
+          ? {
+              ...word,
               box: newBox,
               lastPracticed: new Date().toISOString(),
-              correctCount: isCorrect ? w.correctCount + 1 : w.correctCount,
-              incorrectCount: !isCorrect ? w.incorrectCount + 1 : w.incorrectCount,
-            };
-          }
-          return w;
-        }),
-      }));
-
-      setProfiles(prevProfiles =>
-        prevProfiles.map(profile =>
-          profile.id === activeProfileId ? { ...profile, units: updated } : profile
-        )
-      );
-
-      saveStoredUnits(updated);
-      return updated;
-    });
+              correctCount: isCorrect ? word.correctCount + 1 : word.correctCount,
+              incorrectCount: !isCorrect ? word.incorrectCount + 1 : word.incorrectCount,
+            }
+          : word
+        ),
+      })),
+    }));
   };
 
   const handleSaveUnits = (newUnits: VocabUnit[]) => {
-    setUnits(newUnits);
-    setProfiles(prevProfiles =>
-      prevProfiles.map(profile =>
-        profile.id === activeProfileId ? { ...profile, units: newUnits } : profile
-      )
-    );
-    saveStoredUnits(newUnits);
+    updateActiveProfile(profile => ({ ...profile, units: newUnits }));
   };
 
   const handleMonsterDefeated = () => {
-    setProgress(prev => ({
-      ...prev,
-      monsterDefeatedCount: prev.monsterDefeatedCount + 1,
+    updateActiveProfile(profile => ({
+      ...profile,
+      progress: {
+        ...profile.progress,
+        monsterDefeatedCount: profile.progress.monsterDefeatedCount + 1,
+      },
     }));
   };
 
@@ -163,7 +136,7 @@ export const App: React.FC = () => {
 
     const newProfile = createProfile(
       nextName,
-      getStoredUnits(),
+      activeProfile?.units ?? [],
       { ...INITIAL_PROGRESS },
       selectedAvatar,
       selectedAccent
@@ -215,9 +188,10 @@ export const App: React.FC = () => {
           setProfiles(prev => [...prev, importedProfile]);
           setActiveProfileId(importedProfile.id);
         } else if (parsed.progress && typeof parsed.progress === 'object') {
-          const mergedProgress = { ...getStoredProgress(), ...parsed.progress };
-          setProgress(mergedProgress);
-          saveStoredProgress(mergedProgress);
+          updateActiveProfile(profile => ({
+            ...profile,
+            progress: { ...profile.progress, ...parsed.progress },
+          }));
         }
 
         setCurrentMode('dashboard');
@@ -240,8 +214,8 @@ export const App: React.FC = () => {
       : units.find(u => u.id === selectedUnitId)?.words || [])
       .filter(word => word.isActive !== false);
 
-  const allWordsPool: VocabWord[] = units
-    .flatMap(u => u.words)
+  const allWordsPool = units
+    .flatMap(unit => unit.words)
     .filter(word => word.isActive !== false);
 
   const handleSelectMode = (mode: LearningMode) => {
@@ -289,6 +263,7 @@ export const App: React.FC = () => {
 
         {currentMode === 'flashcards' && (
           <FlashcardMode
+            key={`${activeProfileId}:${selectedUnitId}`}
             words={activeWords}
             soundEnabled={progress.soundEnabled}
             voiceAccent={progress.voiceAccent}
@@ -298,10 +273,10 @@ export const App: React.FC = () => {
           />
         )}
 
-        {currentMode === 'quiz' && (
-          <QuizMode
+        {currentMode === 'memory' && (
+          <MemoryMode
+            key={`${activeProfileId}:${selectedUnitId}`}
             words={activeWords}
-            allWordsPool={allWordsPool}
             soundEnabled={progress.soundEnabled}
             voiceAccent={progress.voiceAccent}
             onUpdateWordBox={handleUpdateWordBox}
@@ -312,6 +287,7 @@ export const App: React.FC = () => {
 
         {currentMode === 'scramble' && (
           <ScrambleMode
+            key={`${activeProfileId}:${selectedUnitId}`}
             words={activeWords}
             soundEnabled={progress.soundEnabled}
             voiceAccent={progress.voiceAccent}
@@ -323,6 +299,7 @@ export const App: React.FC = () => {
 
         {currentMode === 'writing' && (
           <WritingMode
+            key={`${activeProfileId}:${selectedUnitId}`}
             words={activeWords}
             soundEnabled={progress.soundEnabled}
             voiceAccent={progress.voiceAccent}
@@ -334,9 +311,11 @@ export const App: React.FC = () => {
 
         {currentMode === 'monster' && (
           <MonsterQuest
+            key={`${activeProfileId}:${selectedUnitId}`}
             words={activeWords.length > 3 ? activeWords : allWordsPool}
             soundEnabled={progress.soundEnabled}
             voiceAccent={progress.voiceAccent}
+            onUpdateWordBox={handleUpdateWordBox}
             onMonsterDefeated={handleMonsterDefeated}
             onAddXp={handleAddXp}
             onExit={() => setCurrentMode('dashboard')}
@@ -345,6 +324,7 @@ export const App: React.FC = () => {
 
         {currentMode === 'manager' && (
           <VocabManager
+            key={activeProfileId}
             units={units}
             onSaveUnits={handleSaveUnits}
             onExit={() => setCurrentMode('dashboard')}

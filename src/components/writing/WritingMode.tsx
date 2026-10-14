@@ -56,7 +56,18 @@ export const WritingMode: React.FC<WritingModeProps> = ({
     };
   }, []);
 
-  if (!currentWord) return null;
+  if (!currentWord) {
+    return (
+      <div className="max-w-md mx-auto py-16 px-4 text-center">
+        <div className="text-5xl mb-4">📭</div>
+        <h2 className="text-xl font-bold text-slate-800">Keine Vokabeln vorhanden</h2>
+        <p className="text-sm text-slate-500 mt-2">Bitte wähle eine Unit mit freigeschalteten Wörtern.</p>
+        <button onClick={onExit} className="mt-6 px-6 py-2.5 bg-indigo-600 text-white font-bold rounded-2xl shadow-md hover:bg-indigo-700">
+          Zurück
+        </button>
+      </div>
+    );
+  }
 
   const normalize = (str: string) => str.trim().toLowerCase().replace(/\s+/g, ' ');
 
@@ -114,12 +125,12 @@ export const WritingMode: React.FC<WritingModeProps> = ({
     stopListeningRef.current?.();
     stopListeningRef.current = startPronunciationCheck(
       currentWord.en,
-      ({ transcript, matches }) => {
+      ({ matches }) => {
         setIsListening(false);
         setPronunciationFeedback(
           matches
-            ? `Sehr gut! Du hast "${currentWord.en}" richtig gesprochen.`
-            : `Fast! Du hast "${transcript || 'das Wort'}" gesagt. Versuch es noch einmal mit "${currentWord.en}".`
+            ? 'Sehr gut ausgesprochen!'
+            : 'Fast! Höre noch einmal zu und versuche es erneut.'
         );
       },
       () => {
@@ -242,7 +253,7 @@ export const WritingMode: React.FC<WritingModeProps> = ({
             type="button"
             onClick={() => {
               speakEnglish(currentWord.en, 0.9, voiceAccent);
-              setPronunciationFeedback(`Hör zu: "${currentWord.en}"`);
+              setPronunciationFeedback('Höre gut zu und tippe das Wort anschließend ein.');
             }}
             className="flex-1 min-w-[150px] py-3 bg-sky-100 hover:bg-sky-200 text-sky-800 font-bold rounded-2xl flex items-center justify-center gap-2"
           >

@@ -49,7 +49,7 @@ export interface LearnerProfile {
 export type LearningMode = 
   | 'dashboard'
   | 'flashcards'
-  | 'quiz'
+  | 'memory'
   | 'scramble'
   | 'writing'
   | 'monster'

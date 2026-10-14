@@ -1,14 +1,16 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { EnglishAccent, VocabWord } from '../../types/vocab';
 import { Swords, Heart, ArrowLeft, Volume2, Sparkles } from 'lucide-react';
 import { speakEnglish } from '../../services/speech';
 import { playSound } from '../../services/audio';
 import { triggerMegaConfetti } from '../../services/confetti';
+import { createAnswerOptions, shuffleItems } from '../../services/random';
 
 interface MonsterQuestProps {
   words: VocabWord[];
   soundEnabled: boolean;
   voiceAccent: EnglishAccent;
+  onUpdateWordBox: (wordId: string, newBox: number, isCorrect: boolean) => void;
   onMonsterDefeated: () => void;
   onAddXp: (amount: number) => void;
   onExit: () => void;
@@ -25,6 +27,7 @@ export const MonsterQuest: React.FC<MonsterQuestProps> = ({
   words,
   soundEnabled,
   voiceAccent,
+  onUpdateWordBox,
   onMonsterDefeated,
   onAddXp,
   onExit,
@@ -37,10 +40,13 @@ export const MonsterQuest: React.FC<MonsterQuestProps> = ({
   const [isMonsterHit, setIsMonsterHit] = useState(false);
   const [isPlayerHit, setIsPlayerHit] = useState(false);
   const [gameState, setGameState] = useState<'playing' | 'victory' | 'defeat'>('playing');
+  const [shuffledWords] = useState(() => shuffleItems(words));
+  const [options, setOptions] = useState<string[]>([]);
 
   const monster = MONSTER_ROSTER[monsterIndex % MONSTER_ROSTER.length];
-  const shuffledWords = useMemo(() => [...words].sort(() => Math.random() - 0.5), [words]);
-  const currentWord = shuffledWords[currentWordIndex % shuffledWords.length];
+  const currentWord = shuffledWords.length > 0
+    ? shuffledWords[currentWordIndex % shuffledWords.length]
+    : undefined;
 
   useEffect(() => {
     setMonsterHp(monster.maxHp);
@@ -48,19 +54,22 @@ export const MonsterQuest: React.FC<MonsterQuestProps> = ({
     setGameState('playing');
   }, [monsterIndex, monster]);
 
-  const options = useMemo(() => {
-    if (!currentWord) return [];
-    const correct = currentWord.de;
-    const pool = words.filter(w => w.de !== correct).map(w => w.de);
-    const distractors = pool.sort(() => Math.random() - 0.5).slice(0, 3);
-    return [correct, ...distractors].sort(() => Math.random() - 0.5);
-  }, [currentWord, words]);
+  useEffect(() => {
+    if (!currentWord) {
+      setOptions([]);
+      return;
+    }
+
+    setOptions(createAnswerOptions(currentWord.de, shuffledWords.map(word => word.de)));
+  }, [currentWordIndex, currentWord?.id]);
 
   const handleAnswer = (option: string) => {
-    if (selectedAnswer !== null || gameState !== 'playing') return;
+    if (!currentWord || selectedAnswer !== null || gameState !== 'playing') return;
     setSelectedAnswer(option);
 
     const isCorrect = option === currentWord.de;
+    const currentBox = currentWord.box || 1;
+    onUpdateWordBox(currentWord.id, isCorrect ? Math.min(5, currentBox + 1) : 1, isCorrect);
 
     if (isCorrect) {
       // Hit monster!
@@ -101,6 +110,19 @@ export const MonsterQuest: React.FC<MonsterQuestProps> = ({
       }
     }, 1100);
   };
+
+  if (!currentWord) {
+    return (
+      <div className="max-w-md mx-auto text-center py-16 px-4">
+        <div className="text-5xl mb-4">📭</div>
+        <h2 className="text-xl font-bold text-slate-800">Keine Vokabeln vorhanden</h2>
+        <p className="text-sm text-slate-500 mt-2">Bitte wähle eine Unit mit freigeschalteten Wörtern.</p>
+        <button onClick={onExit} className="mt-6 px-6 py-2.5 bg-indigo-600 text-white font-bold rounded-2xl shadow-md hover:bg-indigo-700">
+          Zurück
+        </button>
+      </div>
+    );
+  }
 
   if (gameState === 'victory') {
     return (

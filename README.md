@@ -1,72 +1,49 @@
-# ⚡ LernHeld
+# LernHeld
 
-Eine maßgeschneiderte Lern-App für **Englisch-Vokabeltraining** und Gamification mit Fokus auf klaren Übungen, leichten Tipps und direkter Aussprachepraxis.
+LernHeld ist eine browserbasierte App zum Üben englischer Vokabeln. Sie bietet fünf Lernmodi, Aussprache und getrennte Lernprofile für mehrere Personen auf demselben Gerät.
 
-Läuft 100% statisch im Browser, werbefrei, offline-fähig und optimiert für **GitHub Pages** (Smartphone, Tablet/iPad und PC).
+## Lernmodi
 
----
+- **Karteikarten:** Vokabeln wiederholen und den eigenen Kenntnisstand im 5-Fächer-Leitner-System einschätzen.
+- **Vokabel-Memory:** Englische und deutsche Kartenpaare finden. Englische Karten werden beim Aufdecken vorgelesen; ein Treffer bringt 10 XP und verbessert das Leitner-Fach. Eine Runde enthält bis zu sechs Paare.
+- **Buchstabensalat:** Englische Wörter aus einzelnen Buchstaben zusammensetzen. Die Groß- und Kleinschreibung wird berücksichtigt; einzelne Schritte können zurückgenommen werden.
+- **Schreib-Trainer:** Die englische Übersetzung eintippen, Hinweise nutzen und die Aussprache anhören oder üben.
+- **Monster-Quest:** Mit richtigen Übersetzungen Monster besiegen und Lernfortschritt sammeln.
 
-## 🎯 Enthaltene Features
+Die Sprachausgabe verwendet die Web Speech API des Browsers. Verfügbare Stimmen und Qualität hängen vom jeweiligen Gerät und Browser ab.
 
-### 1. Vokabeltrainer & Übungsmodi
-- **5-Fächer-Kasten (Leitner-System):** Vokabeln wandern bei Erfolg von Fach 1 bis Fach 5.
-- **Native englische Sprachausgabe (TTS):** Akzentfreie Aussprache per Knopfdruck über die Web Speech API.
-- **5 verschiedene Spiel- und Lernmodi:**
-  1. 🗂️ **Karteikarten:** Klassisches Aufdecken mit Beispielsätzen und Audio.
-  2. ⚡ **Speed Quiz:** 4-Auswahl-Quiz mit Streak-Bonus und Sofort-Feedback.
-  3. 🧩 **Buchstabensalat (Scramble):** Wörter Buchstabe für Buchstabe puzzeln (ideal für Touch/Tablet).
-  4. ✍️ **Schreib-Trainer:** Tastatur-Eingabe mit Hilfetipps zur optimalen Vorbereitung auf Tests.
-  5. 👾 **Monster-Bosskampf:** Besiege Vokabel-Monster mit richtigen Antworten (Gamification).
+## Vokabeln und Units
 
-### 2. Vokabeln einpflegen & verwalten
-- **Vorbereiteter Wortschatz für den Englischunterricht:**
-  - Unit 1: *Back to School* (Schulsachen & Klassenzimmer)
-  - Unit 2: *Family & Friends* (Familie & Freunde)
-  - Unit 3: *Pets & Animals* (Haustiere & Tiere)
-  - Unit 4: *My Room & Hobbies* (Zimmer & Freizeit)
-  - Unit 5: *Food & Drinks* (Essen & Trinken)
-- **Schnell-Import (CSV / Text):** Beliebige Vokabellisten im Format `Englisch; Deutsch` direkt per Copy & Paste einfügen.
-- **Manuelle Eingabemaske:** Einzelne Vokabeln mit Beispielsatz und Thema erfassen.
-- **Backup & Synchronisation:** Export und Import aller Daten als Datei (für den Wechsel vom PC aufs Tablet).
+Neue Installationen enthalten keine vorgefertigten Units. Eigene Lerneinheiten und Wörter lassen sich in der Verwaltung anlegen.
 
-### 3. Gamification
-- **Erfahrungspunkte (XP) & Level-System**
-- **Tages-Serie (Streak 🔥)**
-- **Synthetisierte Audio-Effekte (Web Audio API)**
-- **Konfetti-Effekte** bei Erfolgen und Level-Ups
+- Wörter manuell hinzufügen oder Listen zeilenweise im Format `Englisch; Deutsch` importieren.
+- Neue Wörter aus manueller Eingabe, Textimport und OCR landen zunächst in der Staging Area. Sie werden erst nach dem Freischalten in den Lernmodi verwendet.
+- Gedruckte Vokabellisten können als Foto oder Screenshot mit Tesseract.js erkannt und anschließend als vorbereitete Wörter importiert werden. Die Erkennung sollte vor dem Übernehmen geprüft werden.
+- Units und einzelne Vokabeln können bearbeitet, freigeschaltet oder gelöscht werden.
 
-### 4. Backup & kostenlose Synchronisation ohne Backend
-- **Export/Import als JSON-Datei:** Fortschritt, XP, Level, Vokabeln und Einheiten können als Datei exportiert und auf einem anderen Gerät oder Browser wieder importiert werden.
-- **Kostenlose, browserunabhängige Optionen:**
-  1. Datei via Google Drive / Dropbox / OneDrive in der Cloud sichern.
-  2. JSON-Datei mit GitHub Gist, Notion oder einem eigenen Cloud-Ordner synchronisieren.
-  3. Für mehr Komfort später: Supabase oder Firebase als kostenloses Backend mit Auth + Postgres/Firestore einbauen.
-- **Warum das sinnvoll ist:** Ein statisches Frontend bleibt leicht und schnell, während der Lernstand trotzdem separat von einem einzelnen Browser persisitiert werden kann.
+## Fortschritt und Datensicherung
 
----
+Profile, Units, XP, Level und Wortfortschritt werden im `localStorage` des aktuellen Browsers gespeichert. Es gibt keine automatische Cloud-Synchronisierung. Browserdaten zu löschen oder ein anderes Gerät zu verwenden überträgt den Lernstand daher nicht automatisch.
 
-## 🚀 Lokale Entwicklung
+Über die Backup-Funktionen können Profile und Fortschritt als JSON-Datei exportiert und auf einem anderen Gerät wieder importiert werden. Die Vokabelverwaltung bietet zusätzlich einen Export und Import der Units.
+
+Die App hat kein Backend und keine Benutzerkonten. Die Eltern-PIN ist eine lokale Sperre für die Verwaltungsoberfläche, keine serverseitige Authentifizierung.
+
+## Voraussetzungen und Offline-Nutzung
+
+Die App wird als statische Website über GitHub Pages ausgeliefert. Lernstände liegen lokal im Browser. Eine vollständige Offline-Verfügbarkeit ist nicht garantiert; insbesondere kann die OCR-Funktion Internetzugriff benötigen, um Tesseract-Worker und Sprachdaten zu laden. Aussprachefunktionen benötigen einen Browser mit entsprechender Web-Speech-Unterstützung.
+
+## Lokale Entwicklung
 
 ```bash
-# Abhängigkeiten installieren
 npm install
-
-# Entwicklungsserver starten
 npm run dev
-
-# Produktions-Build erstellen
 npm run build
+npm run preview
 ```
 
----
+`npm run build` führt zuerst den TypeScript-Check und danach den Vite-Produktionsbuild aus.
 
-## 🌐 GitHub Pages Aktivierung
+## GitHub Pages
 
-Die App enthält bereits eine vollautomatische GitHub Action (`.github/workflows/deploy.yml`).
-
-Um die Seite nach dem Push auf GitHub live zu schalten:
-1. Gehe im GitHub-Repository auf **Settings** (Einstellungen).
-2. Klicke links im Menü auf **Pages**.
-3. Wähle unter **Build and deployment** bei **Source** die Option:  
-   👉 **GitHub Actions**
-4. Sobald der Branch `main` gepusht wird, wird die App automatisch gebaut und bereitgestellt!
+Die GitHub-Action in `.github/workflows/deploy.yml` baut die App bei Pushes auf `main` und veröffentlicht sie über GitHub Pages. Im Repository muss unter **Settings → Pages → Build and deployment → Source** die Option **GitHub Actions** ausgewählt sein.

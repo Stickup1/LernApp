@@ -1,6 +1,6 @@
 import React from 'react';
 import { VocabUnit, UserProgress, LearningMode, LearnerProfile } from '../types/vocab';
-import { Sparkles, Swords, PlusCircle, UserPlus, Trophy, Flame, BookOpen } from 'lucide-react';
+import { Sparkles, Swords, PlusCircle, UserPlus, Trophy, Flame, BookOpen, Brain } from 'lucide-react';
 
 interface DashboardProps {
   units: VocabUnit[];
@@ -26,9 +26,10 @@ export const Dashboard: React.FC<DashboardProps> = ({
   onStartMode,
 }) => {
   const currentUnit = units.find(u => u.id === selectedUnitId) || units[0];
-  const allWords = selectedUnitId === 'all' 
-    ? units.flatMap(u => u.words) 
+  const selectedWords = selectedUnitId === 'all'
+    ? units.flatMap(u => u.words)
     : currentUnit?.words || [];
+  const allWords = selectedWords.filter(word => word.isActive !== false);
 
   // Calculate Leitner Box stats
   const boxCounts = [0, 0, 0, 0, 0];
@@ -72,9 +73,12 @@ export const Dashboard: React.FC<DashboardProps> = ({
     isCurrent: index === currentStageIndex,
   }));
   const nextRewardStage = heroStages[Math.min(heroStages.length - 1, currentStageIndex + 1)];
+  const isNewStageUnlock = progress.level > 1 && (progress.level - 1) % 10 === 0;
   const rewardHeadline = currentStageIndex === heroStages.length - 1
     ? 'Letzte Auszeichnung erreicht!'
-    : `Neue Auszeichnung freigeschaltet: ${currentStage.name}`;
+    : isNewStageUnlock
+      ? `Neue Auszeichnung freigeschaltet: ${currentStage.name}`
+      : `Aktuelle Auszeichnung: ${currentStage.name}`;
   const nextRewardText = currentStageIndex === heroStages.length - 1
     ? 'Abschluss erreicht'
     : `Nächstes Ziel: ${nextRewardStage.name}`;
@@ -89,7 +93,9 @@ export const Dashboard: React.FC<DashboardProps> = ({
   } as const;
 
   const familyStats = profiles.map(profile => {
-    const profileWords = profile.units.flatMap(unit => unit.words);
+    const profileWords = profile.units
+      .flatMap(unit => unit.words)
+      .filter(word => word.isActive !== false);
     const mastery = profileWords.length > 0
       ? Math.round((profileWords.filter(word => (word.box || 1) >= 5).length / profileWords.length) * 100)
       : 0;
@@ -185,7 +191,9 @@ export const Dashboard: React.FC<DashboardProps> = ({
 
         <div className="relative z-10 mt-5 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <div className="rounded-2xl bg-white/10 border border-white/10 p-3 backdrop-blur-sm flex-1">
-            <div className="text-[10px] font-black uppercase tracking-[0.18em] text-indigo-100">Neue Auszeichnung</div>
+            <div className="text-[10px] font-black uppercase tracking-[0.18em] text-indigo-100">
+              {isNewStageUnlock ? 'Neue Auszeichnung' : 'Dein Heldenabzeichen'}
+            </div>
             <div className="mt-2 text-lg font-black text-white">{rewardHeadline}</div>
           </div>
 
@@ -420,7 +428,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 <div className="flex items-center justify-between">
                   <span className="text-2xl">🌟</span>
                   <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700">
-                    {units.flatMap(u => u.words).length} Wörter
+                    {units.flatMap(u => u.words).filter(word => word.isActive !== false).length} aktiv
                   </span>
                 </div>
                 <div className="font-extrabold text-slate-800 mt-2">Alle Units zusammen</div>
@@ -443,7 +451,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                     <div className="flex items-center justify-between">
                       <span className="text-2xl">{unit.icon}</span>
                       <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700">
-                        {unit.words.length} Wörter
+                        {unit.words.filter(word => word.isActive !== false).length} aktiv
                       </span>
                     </div>
                     <div className="font-extrabold text-slate-800 mt-2 truncate">{unit.title}</div>
@@ -497,24 +505,24 @@ export const Dashboard: React.FC<DashboardProps> = ({
             </div>
           </div>
 
-          {/* 2. Speed Quiz */}
+          {/* 2. Vocabulary Memory */}
           <div
-            onClick={() => onStartMode('quiz')}
+            onClick={() => onStartMode('memory')}
             className="group cursor-pointer bg-white rounded-3xl p-5 border border-slate-200 hover:border-indigo-400 hover:shadow-lg hover:-translate-y-1 transition-all duration-200 flex flex-col justify-between"
           >
             <div>
               <div className="w-12 h-12 rounded-2xl bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-2xl mb-4 group-hover:scale-110 transition-transform">
-                ⚡
+                <Brain className="h-6 w-6" />
               </div>
               <h3 className="font-black text-lg text-slate-800 group-hover:text-indigo-600 transition-colors">
-                Speed Quiz
+                Vokabel-Memory
               </h3>
               <p className="text-xs text-slate-500 mt-1">
-                Wähle blitzschnell die richtige von 4 Bedeutungen aus. Baue deine Serie auf!
+                Finde passende englische und deutsche Kartenpaare. Englische Karten sprechen das Wort beim Aufdecken aus.
               </p>
             </div>
             <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-indigo-700">
-              <span>+15 XP + Streak Bonus</span>
+              <span>Bis zu 6 Paare · 10 XP je Treffer</span>
               <span className="group-hover:translate-x-1 transition-transform">Starten →</span>
             </div>
           </div>
