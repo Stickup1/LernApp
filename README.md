@@ -18,6 +18,14 @@ Neue Installationen enthalten keine vorgefertigten Units. Eigene Lerneinheiten u
 
 - Wörter manuell hinzufügen oder Listen zeilenweise im Format `Englisch; Deutsch` importieren.
 - Neue Wörter aus manueller Eingabe, Textimport und OCR landen zunächst in der Staging Area. Sie werden erst nach dem Freischalten in den Lernmodi verwendet.
+- Eine Vokabel kann mehrere deutsche Bedeutungen haben. Jede Bedeutung kann eigene Beispielsätze und einen eigenen Leitner-Fortschritt haben; Lernmodi und Memory verwenden den Beispielsatz als Kontext.
+- Im Schnellimport können Übersetzungen und Beispielsätze mit `|` paarweise angegeben werden. Die erste Übersetzung ist die Hauptbedeutung:
+
+	```text
+	bank; Bank (Geldinstitut) | Sitzbank; I went to the bank. | We sat on a bench.; Ich ging zur Bank. | Wir saßen auf einer Sitzbank.
+	```
+
+	Die Beispielsätze sind optional und müssen der Reihenfolge der Übersetzungen folgen.
 - Gedruckte Vokabellisten können als Foto oder Screenshot mit Tesseract.js erkannt und anschließend als vorbereitete Wörter importiert werden. Die Erkennung sollte vor dem Übernehmen geprüft werden.
 - Units und einzelne Vokabeln können bearbeitet, freigeschaltet oder gelöscht werden.
 

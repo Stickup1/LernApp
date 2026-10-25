@@ -171,6 +171,9 @@ export const ScrambleMode: React.FC<ScrambleModeProps> = ({
         <div className="text-3xl font-black text-slate-900 pt-2">
           {currentWord.de}
         </div>
+        {currentWord.exampleDe && (
+          <p className="text-sm text-slate-500 italic">{currentWord.exampleDe}</p>
+        )}
         <p className="text-xs text-slate-400">
           Tippe die Buchstaben in der richtigen Reihenfolge an:
         </p>

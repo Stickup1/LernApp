@@ -13,6 +13,7 @@ interface MemoryCard {
   pairId: string;
   side: 'en' | 'de';
   text: string;
+  context?: string;
   word: VocabWord;
 }
 
@@ -26,8 +27,8 @@ interface MemoryModeProps {
 }
 
 const createCards = (words: VocabWord[]): MemoryCard[] => shuffleItems(words.flatMap(word => ([
-  { id: `${word.id}:en`, pairId: word.id, side: 'en' as const, text: word.en, word },
-  { id: `${word.id}:de`, pairId: word.id, side: 'de' as const, text: word.de, word },
+  { id: `${word.id}:en`, pairId: word.id, side: 'en' as const, text: word.en, context: word.exampleEn, word },
+  { id: `${word.id}:de`, pairId: word.id, side: 'de' as const, text: word.de, context: word.exampleDe, word },
 ])));
 
 export const MemoryMode: React.FC<MemoryModeProps> = ({
@@ -181,6 +182,7 @@ export const MemoryMode: React.FC<MemoryModeProps> = ({
                     {card.side === 'en' ? 'English' : 'Deutsch'}
                   </span>
                   <span className="w-full break-words text-sm sm:text-base font-extrabold leading-tight">{card.text}</span>
+                  {card.context && <span className="text-[10px] leading-tight opacity-75">{card.context}</span>}
                   {isMatched && <Check className="h-4 w-4" aria-hidden="true" />}
                 </>
               ) : (

@@ -250,6 +250,9 @@ export const MonsterQuest: React.FC<MonsterQuestProps> = ({
         <div className="text-3xl font-black text-slate-800 pt-2">
           {currentWord.en}
         </div>
+        {currentWord.exampleEn && (
+          <p className="text-sm text-slate-500 italic">{currentWord.exampleEn}</p>
+        )}
         <button
           onClick={() => speakEnglish(currentWord.en, 0.9, voiceAccent)}
           className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold text-indigo-600 hover:text-indigo-800"

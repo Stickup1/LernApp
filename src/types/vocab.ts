@@ -1,9 +1,21 @@
+export interface VocabMeaning {
+  id: string;
+  de: string;
+  exampleEn?: string;
+  exampleDe?: string;
+  box?: number;
+  lastPracticed?: string;
+  correctCount?: number;
+  incorrectCount?: number;
+}
+
 export interface VocabWord {
   id: string;
   en: string;
   de: string;
   exampleEn?: string;
   exampleDe?: string;
+  meanings?: VocabMeaning[];
   type?: 'noun' | 'verb' | 'adjective' | 'phrase' | 'other';
   box: number; // 1 to 5 (Leitner system)
   isActive?: boolean; // false = staged, not yet available for learning
@@ -11,6 +23,8 @@ export interface VocabWord {
   correctCount: number;
   incorrectCount: number;
 }
+
+export type LearningWord = Omit<VocabWord, 'meanings'>;
 
 export interface VocabUnit {
   id: string;

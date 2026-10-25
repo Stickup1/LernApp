@@ -1,6 +1,7 @@
 import React from 'react';
 import { VocabUnit, UserProgress, LearningMode, LearnerProfile } from '../types/vocab';
 import { Sparkles, Swords, PlusCircle, UserPlus, Trophy, Flame, BookOpen, Brain } from 'lucide-react';
+import { expandWordMeanings } from '../services/vocabulary';
 
 interface DashboardProps {
   units: VocabUnit[];
@@ -29,7 +30,9 @@ export const Dashboard: React.FC<DashboardProps> = ({
   const selectedWords = selectedUnitId === 'all'
     ? units.flatMap(u => u.words)
     : currentUnit?.words || [];
-  const allWords = selectedWords.filter(word => word.isActive !== false);
+  const allWords = selectedWords
+    .filter(word => word.isActive !== false)
+    .flatMap(expandWordMeanings);
 
   // Calculate Leitner Box stats
   const boxCounts = [0, 0, 0, 0, 0];
@@ -95,7 +98,8 @@ export const Dashboard: React.FC<DashboardProps> = ({
   const familyStats = profiles.map(profile => {
     const profileWords = profile.units
       .flatMap(unit => unit.words)
-      .filter(word => word.isActive !== false);
+      .filter(word => word.isActive !== false)
+      .flatMap(expandWordMeanings);
     const mastery = profileWords.length > 0
       ? Math.round((profileWords.filter(word => (word.box || 1) >= 5).length / profileWords.length) * 100)
       : 0;
@@ -428,7 +432,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 <div className="flex items-center justify-between">
                   <span className="text-2xl">🌟</span>
                   <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700">
-                    {units.flatMap(u => u.words).filter(word => word.isActive !== false).length} aktiv
+                    {units.flatMap(u => u.words).filter(word => word.isActive !== false).flatMap(expandWordMeanings).length} Bedeutungen
                   </span>
                 </div>
                 <div className="font-extrabold text-slate-800 mt-2">Alle Units zusammen</div>
@@ -451,7 +455,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
                     <div className="flex items-center justify-between">
                       <span className="text-2xl">{unit.icon}</span>
                       <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700">
-                        {unit.words.filter(word => word.isActive !== false).length} aktiv
+                        {unit.words.filter(word => word.isActive !== false).flatMap(expandWordMeanings).length} Bedeutungen
                       </span>
                     </div>
                     <div className="font-extrabold text-slate-800 mt-2 truncate">{unit.title}</div>

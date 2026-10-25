@@ -16,6 +16,7 @@ import { MonsterQuest } from './components/monster/MonsterQuest';
 import { VocabManager } from './components/manage/VocabManager';
 import { playSound } from './services/audio';
 import { triggerConfetti } from './services/confetti';
+import { expandWordMeanings } from './services/vocabulary';
 
 export const App: React.FC = () => {
   const initialProfiles = getStoredProfiles();
@@ -83,16 +84,34 @@ export const App: React.FC = () => {
       ...profile,
       units: profile.units.map(unit => ({
         ...unit,
-        words: unit.words.map(word => word.id === wordId
-          ? {
+        words: unit.words.map(word => {
+          if (word.id === wordId) {
+            return {
               ...word,
               box: newBox,
               lastPracticed: new Date().toISOString(),
               correctCount: isCorrect ? word.correctCount + 1 : word.correctCount,
               incorrectCount: !isCorrect ? word.incorrectCount + 1 : word.incorrectCount,
-            }
-          : word
-        ),
+            };
+          }
+
+          const meaningId = wordId.startsWith(`${word.id}::`) ? wordId.slice(word.id.length + 2) : null;
+          if (!meaningId) return word;
+
+          return {
+            ...word,
+            meanings: (word.meanings ?? []).map(meaning => meaning.id === meaningId
+              ? {
+                  ...meaning,
+                  box: newBox,
+                  lastPracticed: new Date().toISOString(),
+                  correctCount: isCorrect ? (meaning.correctCount ?? 0) + 1 : meaning.correctCount ?? 0,
+                  incorrectCount: !isCorrect ? (meaning.incorrectCount ?? 0) + 1 : meaning.incorrectCount ?? 0,
+                }
+              : meaning
+            ),
+          };
+        }),
       })),
     }));
   };
@@ -212,11 +231,13 @@ export const App: React.FC = () => {
     (selectedUnitId === 'all'
       ? units.flatMap(u => u.words)
       : units.find(u => u.id === selectedUnitId)?.words || [])
-      .filter(word => word.isActive !== false);
+      .filter(word => word.isActive !== false)
+      .flatMap(expandWordMeanings);
 
   const allWordsPool = units
     .flatMap(unit => unit.words)
-    .filter(word => word.isActive !== false);
+    .filter(word => word.isActive !== false)
+    .flatMap(expandWordMeanings);
 
   const handleSelectMode = (mode: LearningMode) => {
     setCurrentMode(mode);

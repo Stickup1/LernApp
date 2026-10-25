@@ -1,8 +1,33 @@
 import React, { useState } from 'react';
 import Tesseract from 'tesseract.js';
-import { VocabUnit, VocabWord } from '../../types/vocab';
+import { VocabMeaning, VocabUnit, VocabWord } from '../../types/vocab';
 import { Plus, Trash2, Download, Upload, ArrowLeft, FileText, Sparkles, BookPlus, Lock, ImageUp } from 'lucide-react';
 import { hasParentPassword, removeParentPassword } from '../../services/auth';
+
+const parseAdditionalMeanings = (text: string, existing: VocabMeaning[] = []): VocabMeaning[] => {
+  const usedIds = new Set<string>();
+
+  return text.split(/\r?\n/).flatMap((line, index) => {
+    const [translation = '', exampleEn = '', exampleDe = ''] = line.split(';');
+    const de = translation.trim();
+    if (!de) return [];
+
+    const previousMeaning = existing.find(meaning => meaning.de === de && !usedIds.has(meaning.id));
+    const id = previousMeaning?.id ?? `meaning_${Date.now()}_${index}_${Math.random().toString(36).slice(2, 7)}`;
+    usedIds.add(id);
+
+    return [{
+      id,
+      de,
+      exampleEn: exampleEn.trim() || undefined,
+      exampleDe: exampleDe.trim() || undefined,
+      box: previousMeaning?.box ?? 1,
+      lastPracticed: previousMeaning?.lastPracticed,
+      correctCount: previousMeaning?.correctCount ?? 0,
+      incorrectCount: previousMeaning?.incorrectCount ?? 0,
+    }];
+  });
+};
 
 interface VocabManagerProps {
   units: VocabUnit[];
@@ -22,6 +47,8 @@ export const VocabManager: React.FC<VocabManagerProps> = ({
   const [manualEn, setManualEn] = useState('');
   const [manualDe, setManualDe] = useState('');
   const [manualExample, setManualExample] = useState('');
+  const [manualExampleDe, setManualExampleDe] = useState('');
+  const [manualMeaningsText, setManualMeaningsText] = useState('');
 
   // Bulk import state
   const [bulkText, setBulkText] = useState('');
@@ -43,6 +70,8 @@ export const VocabManager: React.FC<VocabManagerProps> = ({
   const [editEn, setEditEn] = useState('');
   const [editDe, setEditDe] = useState('');
   const [editExample, setEditExample] = useState('');
+  const [editExampleDe, setEditExampleDe] = useState('');
+  const [editMeaningsText, setEditMeaningsText] = useState('');
 
   const currentUnit = units.find(u => u.id === selectedUnitId) || units[0];
 
@@ -65,15 +94,27 @@ export const VocabManager: React.FC<VocabManagerProps> = ({
 
       if (parts.length >= 2) {
         const en = parts[0].trim();
-        const de = parts[1].trim();
-        const example = parts[2] ? parts[2].trim() : undefined;
+        const translations = parts[1].split('|').map(translation => translation.trim()).filter(Boolean);
+        const de = translations[0] || '';
+        const englishExamples = (parts[2] ?? '').split('|').map(example => example.trim());
+        const germanExamples = (parts[3] ?? '').split('|').map(example => example.trim());
 
         if (en && de) {
           newWords.push({
             id: `custom_${Date.now()}_${index}`,
             en,
             de,
-            exampleEn: example,
+            exampleEn: englishExamples[0] || undefined,
+            exampleDe: germanExamples[0] || undefined,
+            meanings: translations.slice(1).map((meaning, meaningIndex) => ({
+              id: `meaning_${Date.now()}_${index}_${meaningIndex}`,
+              de: meaning,
+              exampleEn: englishExamples[meaningIndex + 1] || undefined,
+              exampleDe: germanExamples[meaningIndex + 1] || undefined,
+              box: 1,
+              correctCount: 0,
+              incorrectCount: 0,
+            })),
             box: 1,
             isActive: false,
             correctCount: 0,
@@ -149,6 +190,8 @@ export const VocabManager: React.FC<VocabManagerProps> = ({
       en: manualEn.trim(),
       de: manualDe.trim(),
       exampleEn: manualExample.trim() || undefined,
+      exampleDe: manualExampleDe.trim() || undefined,
+      meanings: parseAdditionalMeanings(manualMeaningsText),
       box: 1,
       isActive: false,
       correctCount: 0,
@@ -169,6 +212,8 @@ export const VocabManager: React.FC<VocabManagerProps> = ({
     setManualEn('');
     setManualDe('');
     setManualExample('');
+    setManualExampleDe('');
+    setManualMeaningsText('');
   };
 
   const parseOcrTextToPairs = (rawText: string): Array<{ id: string; en: string; de: string }> => {
@@ -308,6 +353,10 @@ export const VocabManager: React.FC<VocabManagerProps> = ({
     setEditEn(word.en);
     setEditDe(word.de);
     setEditExample(word.exampleEn || '');
+    setEditExampleDe(word.exampleDe || '');
+    setEditMeaningsText((word.meanings ?? [])
+      .map(meaning => `${meaning.de}; ${meaning.exampleEn ?? ''}; ${meaning.exampleDe ?? ''}`)
+      .join('\n'));
   };
 
   const handleSaveEditedWord = (e: React.FormEvent) => {
@@ -326,6 +375,8 @@ export const VocabManager: React.FC<VocabManagerProps> = ({
                 en: editEn.trim(),
                 de: editDe.trim(),
                 exampleEn: editExample.trim() || undefined,
+                exampleDe: editExampleDe.trim() || undefined,
+                meanings: parseAdditionalMeanings(editMeaningsText, w.meanings ?? []),
               }
             : w
         ),
@@ -337,6 +388,8 @@ export const VocabManager: React.FC<VocabManagerProps> = ({
     setEditEn('');
     setEditDe('');
     setEditExample('');
+    setEditExampleDe('');
+    setEditMeaningsText('');
   };
 
   const handleCancelEditWord = () => {
@@ -344,6 +397,8 @@ export const VocabManager: React.FC<VocabManagerProps> = ({
     setEditEn('');
     setEditDe('');
     setEditExample('');
+    setEditExampleDe('');
+    setEditMeaningsText('');
   };
 
   // 5. Create New Unit
@@ -485,7 +540,7 @@ export const VocabManager: React.FC<VocabManagerProps> = ({
           <div>
             <h2 className="text-lg font-bold text-slate-800">Schnell-Import für Vokabellisten</h2>
             <p className="text-xs text-slate-500 mt-1">
-              Füge hier Vokabellisten ein (z.B. aus Word, Excel oder Schulnotizen). Format: <code>Englisch; Deutsch</code> pro Zeile.
+              Pro Zeile: <code>Englisch; Deutsch 1 | Deutsch 2; Beispiel Englisch 1 | Beispiel Englisch 2; Beispiel Deutsch 1 | Beispiel Deutsch 2</code>. Beispiele sind optional und folgen der Reihenfolge der Bedeutungen.
             </p>
           </div>
 
@@ -531,7 +586,7 @@ export const VocabManager: React.FC<VocabManagerProps> = ({
               rows={8}
               value={bulkText}
               onChange={e => setBulkText(e.target.value)}
-              placeholder={"pencil case; Federmäppchen\nruler; Lineal\nblackboard; Schultafel\nhomework; Hausaufgabe"}
+              placeholder={"pencil case; Federmäppchen\nruler; Lineal\nbank; Bank (Geldinstitut) | Sitzbank; I went to the bank. | We sat on a bench.; Ich ging zur Bank. | Wir saßen auf einer Sitzbank."}
               className="w-full p-3 font-mono text-sm bg-slate-50 border border-slate-300 rounded-2xl outline-none focus:border-indigo-600 focus:bg-white"
             />
           </div>
@@ -672,17 +727,47 @@ export const VocabManager: React.FC<VocabManagerProps> = ({
               </div>
             </div>
 
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Beispielsatz auf Englisch (optional)
+                </label>
+                <input
+                  type="text"
+                  placeholder="The bank is open today."
+                  value={manualExample}
+                  onChange={e => setManualExample(e.target.value)}
+                  className="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Beispielsatz auf Deutsch (optional)
+                </label>
+                <input
+                  type="text"
+                  placeholder="Die Bank ist heute geöffnet."
+                  value={manualExampleDe}
+                  onChange={e => setManualExampleDe(e.target.value)}
+                  className="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl text-sm"
+                />
+              </div>
+            </div>
+
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1">
-                Optional: Beispielsatz auf Englisch
+                Weitere Bedeutungen (optional)
               </label>
-              <input
-                type="text"
-                placeholder="z.B. My pencil case is in the bag."
-                value={manualExample}
-                onChange={e => setManualExample(e.target.value)}
+              <textarea
+                rows={4}
+                value={manualMeaningsText}
+                onChange={e => setManualMeaningsText(e.target.value)}
+                placeholder={'Sitzbank; We sat on a bank.; Wir saßen auf einer Bank.\nGeldinstitut; I went to the bank.; Ich ging zur Bank.'}
                 className="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl text-sm"
               />
+              <p className="mt-1 text-[11px] text-slate-500">
+                Eine Bedeutung pro Zeile: deutsche Bedeutung; Beispielsatz Englisch; Beispielsatz Deutsch.
+              </p>
             </div>
 
             <button
@@ -797,6 +882,11 @@ export const VocabManager: React.FC<VocabManagerProps> = ({
                                 <div className="min-w-0 flex-1">
                                   <div className="font-extrabold text-slate-800 text-sm truncate">{w.en}</div>
                                   <div className="text-xs text-slate-500 truncate">{w.de}</div>
+                                  {w.meanings?.map(meaning => (
+                                    <div key={meaning.id} className="text-[10px] text-slate-500 truncate">
+                                      {meaning.de}{meaning.exampleEn ? ` · ${meaning.exampleEn}` : ''}
+                                    </div>
+                                  ))}
                                 </div>
                                 <div className="flex items-center gap-2 shrink-0">
                                   <span className="text-[10px] font-bold px-2 py-1 rounded-full bg-amber-100 text-amber-700">Vorbereitung</span>
@@ -848,13 +938,34 @@ export const VocabManager: React.FC<VocabManagerProps> = ({
                                         placeholder="Deutsch"
                                       />
                                     </div>
-                                    <input
-                                      type="text"
-                                      value={editExample}
-                                      onChange={e => setEditExample(e.target.value)}
-                                      className="w-full p-2 bg-white border border-slate-300 rounded-xl text-sm"
-                                      placeholder="Beispielsatz (optional)"
-                                    />
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                      <input
+                                        type="text"
+                                        value={editExample}
+                                        onChange={e => setEditExample(e.target.value)}
+                                        className="w-full p-2 bg-white border border-slate-300 rounded-xl text-sm"
+                                        placeholder="Beispiel Englisch (optional)"
+                                      />
+                                      <input
+                                        type="text"
+                                        value={editExampleDe}
+                                        onChange={e => setEditExampleDe(e.target.value)}
+                                        className="w-full p-2 bg-white border border-slate-300 rounded-xl text-sm"
+                                        placeholder="Beispiel Deutsch (optional)"
+                                      />
+                                    </div>
+                                    <div>
+                                      <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                                        Weitere Bedeutungen: eine pro Zeile als Deutsch; Englisch; Deutsch
+                                      </label>
+                                      <textarea
+                                        rows={3}
+                                        value={editMeaningsText}
+                                        onChange={e => setEditMeaningsText(e.target.value)}
+                                        className="w-full p-2 bg-white border border-slate-300 rounded-xl text-sm"
+                                        placeholder={'Sitzbank; We sat on a bank.; Wir saßen auf einer Bank.'}
+                                      />
+                                    </div>
                                     <div className="flex items-center justify-end gap-2">
                                       <button
                                         type="button"
@@ -876,6 +987,11 @@ export const VocabManager: React.FC<VocabManagerProps> = ({
                                     <div className="flex-1 min-w-0">
                                       <div className="font-extrabold text-slate-800 text-sm truncate">{w.en}</div>
                                       <div className="text-xs text-slate-500 truncate">{w.de}</div>
+                                      {w.meanings?.map(meaning => (
+                                        <div key={meaning.id} className="text-[10px] text-slate-500 truncate">
+                                          {meaning.de}{meaning.exampleEn ? ` · ${meaning.exampleEn}` : ''}
+                                        </div>
+                                      ))}
                                     </div>
                                     <div className="flex items-center gap-2 shrink-0">
                                       <div className="text-[10px] font-bold px-2 py-1 rounded-full bg-indigo-100 text-indigo-700 whitespace-nowrap">

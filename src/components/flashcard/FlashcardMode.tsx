@@ -243,6 +243,11 @@ export const FlashcardMode: React.FC<FlashcardModeProps> = ({
         <div className="text-3xl sm:text-4xl font-black text-slate-900 pt-1">
           {questionText}
         </div>
+        {(direction === 'en-de' ? currentWord.exampleEn : currentWord.exampleDe) && (
+          <p className="text-sm text-slate-500 italic">
+            {direction === 'en-de' ? currentWord.exampleEn : currentWord.exampleDe}
+          </p>
+        )}
 
         {/* Audio button – always shown for English words */}
         {(direction === 'en-de') && (

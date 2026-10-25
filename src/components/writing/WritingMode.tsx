@@ -189,10 +189,8 @@ export const WritingMode: React.FC<WritingModeProps> = ({
         <div className="text-3xl font-black text-slate-900 pt-2">
           {currentWord.de}
         </div>
-        {currentWord.exampleEn && (
-          <p className="text-xs text-slate-500 italic">
-            Hinweis: {currentWord.type === 'noun' ? 'Substantiv' : currentWord.type === 'verb' ? 'Verb' : 'Vokabel'}
-          </p>
+        {currentWord.exampleDe && (
+          <p className="text-sm text-slate-500 italic">{currentWord.exampleDe}</p>
         )}
       </div>
 
