@@ -4,6 +4,7 @@ import { Volume2, ArrowLeft, Check, Sparkles, HelpCircle, RotateCcw, Eye, Mic, M
 import { isPronunciationCheckSupported, speakEnglish, startPronunciationCheck } from '../../services/speech';
 import { playSound } from '../../services/audio';
 import { triggerConfetti } from '../../services/confetti';
+import { shuffleItems } from '../../services/random';
 
 interface FlashcardModeProps {
   words: VocabWord[];
@@ -22,6 +23,7 @@ export const FlashcardMode: React.FC<FlashcardModeProps> = ({
   onAddXp,
   onExit,
 }) => {
+  const [sessionWords, setSessionWords] = useState(() => shuffleItems(words));
   const [currentIndex, setCurrentIndex] = useState(0);
   const [inputVal, setInputVal] = useState('');
   const [feedback, setFeedback] = useState<'idle' | 'correct' | 'wrong'>('idle');
@@ -35,7 +37,7 @@ export const FlashcardMode: React.FC<FlashcardModeProps> = ({
   const inputRef = useRef<HTMLInputElement>(null);
   const stopListeningRef = useRef<(() => void) | null>(null);
 
-  const currentWord = words[currentIndex];
+  const currentWord = sessionWords[currentIndex];
 
   useEffect(() => {
     resetCard();
@@ -97,7 +99,7 @@ export const FlashcardMode: React.FC<FlashcardModeProps> = ({
   };
 
   const advance = () => {
-    if (currentIndex + 1 < words.length) {
+    if (currentIndex + 1 < sessionWords.length) {
       setCurrentIndex(i => i + 1);
     } else {
       setFinished(true);
@@ -141,7 +143,7 @@ export const FlashcardMode: React.FC<FlashcardModeProps> = ({
     );
   };
 
-  if (words.length === 0) {
+  if (sessionWords.length === 0) {
     return (
       <div className="max-w-md mx-auto text-center py-16 px-4">
         <div className="text-5xl mb-4">📭</div>
@@ -164,7 +166,7 @@ export const FlashcardMode: React.FC<FlashcardModeProps> = ({
         </div>
         <div>
           <h2 className="text-2xl font-black text-slate-800">Runde beendet!</h2>
-          <p className="text-sm text-slate-500 mt-1">Du hast alle {words.length} Vokabeln eingetippt.</p>
+          <p className="text-sm text-slate-500 mt-1">Du hast alle {sessionWords.length} Vokabeln eingetippt.</p>
         </div>
         <div className="grid grid-cols-3 gap-3">
           <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-3 text-center">
@@ -186,7 +188,13 @@ export const FlashcardMode: React.FC<FlashcardModeProps> = ({
         </div>
         <div className="flex gap-3 justify-center">
           <button
-            onClick={() => { setCurrentIndex(0); setScore({ correct: 0, wrong: 0 }); setFinished(false); }}
+            onClick={() => {
+              setSessionWords(shuffleItems(words));
+              setCurrentIndex(0);
+              resetCard();
+              setScore({ correct: 0, wrong: 0 });
+              setFinished(false);
+            }}
             className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-2xl flex items-center gap-2"
           >
             <RotateCcw className="w-4 h-4" /> Nochmal
@@ -217,7 +225,7 @@ export const FlashcardMode: React.FC<FlashcardModeProps> = ({
             {direction === 'en-de' ? 'EN → DE' : 'DE → EN'}
           </button>
           <span className="text-xs font-bold text-slate-500 bg-slate-100 px-3 py-1 rounded-full">
-            {currentIndex + 1} / {words.length}
+            {currentIndex + 1} / {sessionWords.length}
           </span>
         </div>
       </div>
@@ -226,7 +234,7 @@ export const FlashcardMode: React.FC<FlashcardModeProps> = ({
       <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
         <div
           className="bg-indigo-500 h-full transition-all duration-300"
-          style={{ width: `${((currentIndex + 1) / words.length) * 100}%` }}
+          style={{ width: `${((currentIndex + 1) / sessionWords.length) * 100}%` }}
         />
       </div>
 

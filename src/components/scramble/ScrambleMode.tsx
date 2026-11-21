@@ -29,13 +29,14 @@ export const ScrambleMode: React.FC<ScrambleModeProps> = ({
   onAddXp,
   onExit,
 }) => {
+  const [sessionWords] = useState(() => shuffleItems(words));
   const [currentIndex, setCurrentIndex] = useState(0);
   const [availableTiles, setAvailableTiles] = useState<LetterTile[]>([]);
   const [selectedTiles, setSelectedTiles] = useState<LetterTile[]>([]);
   const [isSuccess, setIsSuccess] = useState(false);
   const [finished, setFinished] = useState(false);
 
-  const currentWord = words[currentIndex];
+  const currentWord = sessionWords[currentIndex];
 
   useEffect(() => {
     if (!currentWord) return;
@@ -87,7 +88,7 @@ export const ScrambleMode: React.FC<ScrambleModeProps> = ({
       onUpdateWordBox(currentWord.id, Math.min(5, (currentWord.box || 1) + 1), true);
 
       setTimeout(() => {
-        if (currentIndex + 1 < words.length) {
+        if (currentIndex + 1 < sessionWords.length) {
           setCurrentIndex(i => i + 1);
         } else {
           setFinished(true);
@@ -137,7 +138,7 @@ export const ScrambleMode: React.FC<ScrambleModeProps> = ({
         </div>
         <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl text-emerald-900 font-bold flex items-center justify-center gap-2">
           <Sparkles className="w-5 h-5 text-emerald-600" />
-          <span>+{words.length * 15} XP erhalten!</span>
+          <span>+{sessionWords.length * 15} XP erhalten!</span>
         </div>
         <button
           onClick={onExit}
@@ -159,7 +160,7 @@ export const ScrambleMode: React.FC<ScrambleModeProps> = ({
           <ArrowLeft className="w-4 h-4" /> Beenden
         </button>
         <span className="text-xs font-bold text-slate-500 bg-slate-100 px-3 py-1 rounded-full">
-          Wort {currentIndex + 1} / {words.length}
+          Wort {currentIndex + 1} / {sessionWords.length}
         </span>
       </div>
 

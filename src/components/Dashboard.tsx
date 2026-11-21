@@ -52,38 +52,66 @@ export const Dashboard: React.FC<DashboardProps> = ({
     : `${Math.max(0, todayGoal - progress.wordsPracticedToday)} Wörter bis zum Tagesziel`;
 
   const heroStages = [
-    { name: 'Lernanfänger', icon: '🌱' },
-    { name: 'Wortkämpfer', icon: '⚔️' },
-    { name: 'Sprachheld', icon: '🛡️' },
-    { name: 'Vokabelritter', icon: '🏹' },
-    { name: 'Wortmagier', icon: '✨' },
-    { name: 'Missionar', icon: '🚀' },
-    { name: 'Sprachmeister', icon: '👑' },
-    { name: 'Wort-Wächter', icon: '🦁' },
-    { name: 'Elite-Held', icon: '🌟' },
-    { name: 'Legenden-Champion', icon: '🏆' },
+    { name: 'Lernanfänger', icon: '🌱', level: 1 },
+    { name: 'Wort-Entdecker', icon: '🧭', level: 6 },
+    { name: 'Wortkämpfer', icon: '⚔️', level: 11 },
+    { name: 'Silben-Späher', icon: '🔎', level: 16 },
+    { name: 'Sprachheld', icon: '🛡️', level: 21 },
+    { name: 'Vokabel-Abenteurer', icon: '🗺️', level: 26 },
+    { name: 'Vokabelritter', icon: '🏹', level: 31 },
+    { name: 'Grammatik-Gladiator', icon: '🏟️', level: 36 },
+    { name: 'Wortmagier', icon: '✨', level: 41 },
+    { name: 'Satzzauberer', icon: '🪄', level: 46 },
+    { name: 'Missionar', icon: '🚀', level: 51 },
+    { name: 'Wort-Weltraumfahrer', icon: '🪐', level: 56 },
+    { name: 'Sprachmeister', icon: '👑', level: 61 },
+    { name: 'Englisch-Experte', icon: '🎓', level: 66 },
+    { name: 'Wort-Wächter', icon: '🦁', level: 71 },
+    { name: 'Wissensdrache', icon: '🐉', level: 76 },
+    { name: 'Elite-Held', icon: '🌟', level: 81 },
+    { name: 'Sprach-Ninja', icon: '🥷', level: 86 },
+    { name: 'Legenden-Champion', icon: '🏆', level: 91 },
+    { name: 'Wort-Wirbelwind', icon: '🌪️', level: 96 },
+    { name: 'Vokabel-Pilot', icon: '🛩️', level: 101 },
+    { name: 'Sternen-Sammler', icon: '🌌', level: 106 },
+    { name: 'Wortakrobat', icon: '🤸', level: 111 },
+    { name: 'Sprachen-Detektiv', icon: '🕵️', level: 116 },
+    { name: 'Englisch-Kapitän', icon: '⛵', level: 121 },
+    { name: 'Wörterbuch-Wunder', icon: '📚', level: 126 },
+    { name: 'Meister der Bedeutungen', icon: '💎', level: 131 },
+    { name: 'Galaxie-Übersetzer', icon: '👽', level: 136 },
+    { name: 'Sprach-Legende', icon: '🦄', level: 141 },
+    { name: 'Weltklasse-Wortheld', icon: '🌍', level: 146 },
+    { name: 'Unbesiegbarer Sprach-Champion', icon: '🏅', level: 151 },
   ];
 
-  const currentStageIndex = Math.min(heroStages.length - 1, Math.floor((progress.level - 1) / 10));
+  const currentStageIndex = Math.max(
+    0,
+    heroStages.filter(stage => stage.level <= progress.level).length - 1,
+  );
   const currentStage = heroStages[currentStageIndex];
-  const stageProgressIndex = ((progress.level - 1) % 10) + 1;
-  const stageProgressPercent = Math.round((stageProgressIndex / 10) * 100);
-  const levelsToNextStage = 10 - ((progress.level - 1) % 10);
+  const nextRewardStage = heroStages[currentStageIndex + 1];
+  const levelsInStage = nextRewardStage ? nextRewardStage.level - currentStage.level : 1;
+  const stageProgressIndex = nextRewardStage
+    ? Math.max(1, Math.min(levelsInStage, progress.level - currentStage.level + 1))
+    : 1;
+  const stageProgressPercent = nextRewardStage
+    ? Math.round((stageProgressIndex / levelsInStage) * 100)
+    : 100;
+  const levelsToNextStage = nextRewardStage ? nextRewardStage.level - progress.level : 0;
   const stageBadges = heroStages.map((stage, index) => ({
     ...stage,
-    level: index * 10 + 1,
-    unlocked: progress.level >= index * 10 + 1,
+    unlocked: progress.level >= stage.level,
     isCurrent: index === currentStageIndex,
   }));
-  const nextRewardStage = heroStages[Math.min(heroStages.length - 1, currentStageIndex + 1)];
-  const isNewStageUnlock = progress.level > 1 && (progress.level - 1) % 10 === 0;
-  const rewardHeadline = currentStageIndex === heroStages.length - 1
-    ? 'Letzte Auszeichnung erreicht!'
+  const isNewStageUnlock = currentStage.level > 1 && progress.level === currentStage.level;
+  const rewardHeadline = !nextRewardStage
+    ? 'Alle Auszeichnungen gesammelt!'
     : isNewStageUnlock
       ? `Neue Auszeichnung freigeschaltet: ${currentStage.name}`
       : `Aktuelle Auszeichnung: ${currentStage.name}`;
-  const nextRewardText = currentStageIndex === heroStages.length - 1
-    ? 'Abschluss erreicht'
+  const nextRewardText = !nextRewardStage
+    ? 'Alle Heldenstufen erreicht'
     : `Nächstes Ziel: ${nextRewardStage.name}`;
 
   const profilePalettes = {
@@ -179,7 +207,11 @@ export const Dashboard: React.FC<DashboardProps> = ({
           <div className="rounded-2xl bg-white/10 border border-white/10 p-3 backdrop-blur-sm">
             <div className="flex items-center justify-between text-[11px] uppercase tracking-[0.12em] text-indigo-100 font-bold">
               <span>Heldenfortschritt</span>
-              <span>{stageProgressIndex}/10 Level</span>
+              <span>
+                {nextRewardStage
+                  ? `${stageProgressIndex}/${levelsInStage} Level`
+                  : 'Alle Heldenstufen erreicht'}
+              </span>
             </div>
             <div className="mt-2 h-2.5 bg-white/10 rounded-full overflow-hidden">
               <div
@@ -188,7 +220,9 @@ export const Dashboard: React.FC<DashboardProps> = ({
               />
             </div>
             <div className="mt-2 text-sm font-semibold text-amber-100">
-              {levelsToNextStage} Level bis zur nächsten Heldenstufe
+              {nextRewardStage
+                ? `${levelsToNextStage} Level bis zur nächsten Heldenstufe`
+                : 'Alle Badges gesammelt – weiterlernen und XP sammeln!'}
             </div>
           </div>
         </div>
@@ -240,6 +274,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
             {stageBadges.map((badge) => (
               <div
                 key={badge.name}
+                title={`${badge.name} – freigeschaltet ab Level ${badge.level}`}
                 className={`rounded-2xl border p-2 text-center transition-all ${
                   badge.unlocked
                     ? 'border-white/20 bg-white/10 text-white shadow-sm'

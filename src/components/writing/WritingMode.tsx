@@ -4,6 +4,7 @@ import { ArrowLeft, Check, Sparkles, Volume2, HelpCircle, Eye, Mic, MicOff } fro
 import { isPronunciationCheckSupported, speakEnglish, startPronunciationCheck } from '../../services/speech';
 import { playSound } from '../../services/audio';
 import { triggerConfetti } from '../../services/confetti';
+import { shuffleItems } from '../../services/random';
 
 interface WritingModeProps {
   words: VocabWord[];
@@ -22,6 +23,7 @@ export const WritingMode: React.FC<WritingModeProps> = ({
   onAddXp,
   onExit,
 }) => {
+  const [sessionWords] = useState(() => shuffleItems(words));
   const [currentIndex, setCurrentIndex] = useState(0);
   const [inputVal, setInputVal] = useState('');
   const [showSolution, setShowSolution] = useState(false);
@@ -33,7 +35,7 @@ export const WritingMode: React.FC<WritingModeProps> = ({
   const inputRef = useRef<HTMLInputElement>(null);
   const stopListeningRef = useRef<(() => void) | null>(null);
 
-  const currentWord = words[currentIndex];
+  const currentWord = sessionWords[currentIndex];
 
   useEffect(() => {
     stopListeningRef.current?.();
@@ -87,7 +89,7 @@ export const WritingMode: React.FC<WritingModeProps> = ({
       onUpdateWordBox(currentWord.id, Math.min(5, (currentWord.box || 1) + 1), true);
 
       setTimeout(() => {
-        if (currentIndex + 1 < words.length) {
+        if (currentIndex + 1 < sessionWords.length) {
           setCurrentIndex(i => i + 1);
         } else {
           setFinished(true);
@@ -155,7 +157,7 @@ export const WritingMode: React.FC<WritingModeProps> = ({
         </div>
         <div className="p-4 bg-cyan-50 border border-cyan-200 rounded-2xl text-cyan-900 font-bold flex items-center justify-center gap-2">
           <Sparkles className="w-5 h-5 text-cyan-600" />
-          <span>+{words.length * 20} XP erhalten!</span>
+          <span>+{sessionWords.length * 20} XP erhalten!</span>
         </div>
         <button
           onClick={onExit}
@@ -177,7 +179,7 @@ export const WritingMode: React.FC<WritingModeProps> = ({
           <ArrowLeft className="w-4 h-4" /> Beenden
         </button>
         <span className="text-xs font-bold text-slate-500 bg-slate-100 px-3 py-1 rounded-full">
-          Wort {currentIndex + 1} / {words.length}
+          Wort {currentIndex + 1} / {sessionWords.length}
         </span>
       </div>
 
