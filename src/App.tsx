@@ -15,8 +15,9 @@ import { WritingMode } from './components/writing/WritingMode';
 import { MonsterQuest } from './components/monster/MonsterQuest';
 import { VocabManager } from './components/manage/VocabManager';
 import { playSound } from './services/audio';
-import { triggerConfetti } from './services/confetti';
+import { triggerConfetti, triggerMegaConfetti } from './services/confetti';
 import { expandWordMeanings } from './services/vocabulary';
+import { HERO_STAGES } from './data/heroStages';
 
 export const App: React.FC = () => {
   const initialProfiles = getStoredProfiles();
@@ -51,7 +52,14 @@ export const App: React.FC = () => {
 
     if (calculatedLevel > progress.level) {
       playSound('levelup', progress.soundEnabled);
-      triggerConfetti();
+      const earnedBadge = HERO_STAGES.some(
+        stage => stage.level > progress.level && stage.level <= calculatedLevel,
+      );
+      if (earnedBadge) {
+        triggerMegaConfetti();
+      } else {
+        triggerConfetti();
+      }
     }
 
     updateActiveProfile(profile => ({

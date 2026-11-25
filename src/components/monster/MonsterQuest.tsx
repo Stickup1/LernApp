@@ -21,6 +21,16 @@ const MONSTER_ROSTER = [
   { name: 'Feuer-Dämon Ignis', maxHp: 10, avatar: '👹', color: 'from-orange-500 to-red-700' },
   { name: 'Schatten-Drache Nox', maxHp: 12, avatar: '🐉', color: 'from-indigo-600 to-purple-900' },
   { name: 'Kosmo-Krake Zorg', maxHp: 14, avatar: '🐙', color: 'from-pink-500 to-fuchsia-800' },
+  { name: 'Eis-Golem Frosti', maxHp: 16, avatar: '🧊', color: 'from-cyan-400 to-blue-700' },
+  { name: 'Donner-Troll Brummel', maxHp: 18, avatar: '👺', color: 'from-yellow-500 to-amber-800' },
+  { name: 'Giftpilz Spori', maxHp: 20, avatar: '🍄', color: 'from-lime-500 to-green-800' },
+  { name: 'Lavapanther Glutpranke', maxHp: 22, avatar: '🐆', color: 'from-red-500 to-orange-900' },
+  { name: 'Kristall-Wächter Glitz', maxHp: 24, avatar: '💎', color: 'from-sky-400 to-indigo-800' },
+  { name: 'Nebelphönix Dunstflug', maxHp: 26, avatar: '🦅', color: 'from-slate-400 to-violet-800' },
+  { name: 'Sumpfhydra Vielkopf', maxHp: 28, avatar: '🐍', color: 'from-emerald-600 to-lime-900' },
+  { name: 'Sternenwächter Orion', maxHp: 30, avatar: '👽', color: 'from-violet-500 to-blue-950' },
+  { name: 'Zeitwirbel Chronos', maxHp: 32, avatar: '🌀', color: 'from-fuchsia-500 to-indigo-900' },
+  { name: 'Drachenkaiser Flammenflug', maxHp: 34, avatar: '🐲', color: 'from-rose-600 to-red-950' },
 ];
 
 export const MonsterQuest: React.FC<MonsterQuestProps> = ({

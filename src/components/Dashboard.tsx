@@ -2,6 +2,7 @@ import React from 'react';
 import { VocabUnit, UserProgress, LearningMode, LearnerProfile } from '../types/vocab';
 import { Sparkles, Swords, PlusCircle, UserPlus, Trophy, Flame, BookOpen, Brain } from 'lucide-react';
 import { expandWordMeanings } from '../services/vocabulary';
+import { HERO_STAGES } from '../data/heroStages';
 
 interface DashboardProps {
   units: VocabUnit[];
@@ -51,46 +52,12 @@ export const Dashboard: React.FC<DashboardProps> = ({
     ? 'Tagesziel erreicht!'
     : `${Math.max(0, todayGoal - progress.wordsPracticedToday)} Wörter bis zum Tagesziel`;
 
-  const heroStages = [
-    { name: 'Lernanfänger', icon: '🌱', level: 1 },
-    { name: 'Wort-Entdecker', icon: '🧭', level: 6 },
-    { name: 'Wortkämpfer', icon: '⚔️', level: 11 },
-    { name: 'Silben-Späher', icon: '🔎', level: 16 },
-    { name: 'Sprachheld', icon: '🛡️', level: 21 },
-    { name: 'Vokabel-Abenteurer', icon: '🗺️', level: 26 },
-    { name: 'Vokabelritter', icon: '🏹', level: 31 },
-    { name: 'Grammatik-Gladiator', icon: '🏟️', level: 36 },
-    { name: 'Wortmagier', icon: '✨', level: 41 },
-    { name: 'Satzzauberer', icon: '🪄', level: 46 },
-    { name: 'Missionar', icon: '🚀', level: 51 },
-    { name: 'Wort-Weltraumfahrer', icon: '🪐', level: 56 },
-    { name: 'Sprachmeister', icon: '👑', level: 61 },
-    { name: 'Englisch-Experte', icon: '🎓', level: 66 },
-    { name: 'Wort-Wächter', icon: '🦁', level: 71 },
-    { name: 'Wissensdrache', icon: '🐉', level: 76 },
-    { name: 'Elite-Held', icon: '🌟', level: 81 },
-    { name: 'Sprach-Ninja', icon: '🥷', level: 86 },
-    { name: 'Legenden-Champion', icon: '🏆', level: 91 },
-    { name: 'Wort-Wirbelwind', icon: '🌪️', level: 96 },
-    { name: 'Vokabel-Pilot', icon: '🛩️', level: 101 },
-    { name: 'Sternen-Sammler', icon: '🌌', level: 106 },
-    { name: 'Wortakrobat', icon: '🤸', level: 111 },
-    { name: 'Sprachen-Detektiv', icon: '🕵️', level: 116 },
-    { name: 'Englisch-Kapitän', icon: '⛵', level: 121 },
-    { name: 'Wörterbuch-Wunder', icon: '📚', level: 126 },
-    { name: 'Meister der Bedeutungen', icon: '💎', level: 131 },
-    { name: 'Galaxie-Übersetzer', icon: '👽', level: 136 },
-    { name: 'Sprach-Legende', icon: '🦄', level: 141 },
-    { name: 'Weltklasse-Wortheld', icon: '🌍', level: 146 },
-    { name: 'Unbesiegbarer Sprach-Champion', icon: '🏅', level: 151 },
-  ];
-
   const currentStageIndex = Math.max(
     0,
-    heroStages.filter(stage => stage.level <= progress.level).length - 1,
+    HERO_STAGES.filter(stage => stage.level <= progress.level).length - 1,
   );
-  const currentStage = heroStages[currentStageIndex];
-  const nextRewardStage = heroStages[currentStageIndex + 1];
+  const currentStage = HERO_STAGES[currentStageIndex];
+  const nextRewardStage = HERO_STAGES[currentStageIndex + 1];
   const levelsInStage = nextRewardStage ? nextRewardStage.level - currentStage.level : 1;
   const stageProgressIndex = nextRewardStage
     ? Math.max(1, Math.min(levelsInStage, progress.level - currentStage.level + 1))
@@ -99,7 +66,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
     ? Math.round((stageProgressIndex / levelsInStage) * 100)
     : 100;
   const levelsToNextStage = nextRewardStage ? nextRewardStage.level - progress.level : 0;
-  const stageBadges = heroStages.map((stage, index) => ({
+  const stageBadges = HERO_STAGES.map((stage, index) => ({
     ...stage,
     unlocked: progress.level >= stage.level,
     isCurrent: index === currentStageIndex,
@@ -267,7 +234,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
         <div className="relative z-10 mt-5">
           <div className="flex items-center justify-between text-[11px] font-black uppercase tracking-[0.18em] text-indigo-100 mb-2">
             <span>Badges</span>
-            <span>{currentStageIndex + 1}/{heroStages.length}</span>
+            <span>{currentStageIndex + 1}/{HERO_STAGES.length}</span>
           </div>
 
           <div className="grid grid-cols-5 gap-2 sm:grid-cols-10">
