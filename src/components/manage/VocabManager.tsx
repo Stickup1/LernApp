@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import Tesseract from 'tesseract.js';
 import { VocabMeaning, VocabUnit, VocabWord } from '../../types/vocab';
-import { Plus, Trash2, Download, Upload, ArrowLeft, FileText, Sparkles, BookPlus, Lock, ImageUp } from 'lucide-react';
+import { Plus, Trash2, Download, Upload, ArrowLeft, ArrowRightLeft, FileText, Sparkles, BookPlus, Lock, ImageUp } from 'lucide-react';
 import { hasParentPassword, removeParentPassword } from '../../services/auth';
 
 const parseAdditionalMeanings = (text: string, existing: VocabMeaning[] = []): VocabMeaning[] => {
@@ -72,8 +72,15 @@ export const VocabManager: React.FC<VocabManagerProps> = ({
   const [editExample, setEditExample] = useState('');
   const [editExampleDe, setEditExampleDe] = useState('');
   const [editMeaningsText, setEditMeaningsText] = useState('');
+  const [selectedWordIds, setSelectedWordIds] = useState<string[]>([]);
+  const [moveTargetUnitId, setMoveTargetUnitId] = useState('');
 
   const currentUnit = units.find(u => u.id === selectedUnitId) || units[0];
+  const handleSelectUnit = (unitId: string) => {
+    setSelectedUnitId(unitId);
+    setSelectedWordIds([]);
+    setMoveTargetUnitId('');
+  };
 
   // 1. Bulk CSV / Text Import Handler
   const handleBulkImport = () => {
@@ -143,6 +150,8 @@ export const VocabManager: React.FC<VocabManagerProps> = ({
       const updated = [...units, newUnit];
       onSaveUnits(updated);
       setSelectedUnitId(newUnit.id);
+      setSelectedWordIds([]);
+      setMoveTargetUnitId('');
       setImportNotice(`${newWords.length} Vokabeln in neuer Einheit „${newUnit.title}“ gespeichert!`);
     } else if (currentUnit) {
       // Append to current unit
@@ -345,6 +354,7 @@ export const VocabManager: React.FC<VocabManagerProps> = ({
       return u;
     });
     onSaveUnits(updated);
+    setSelectedWordIds(current => current.filter(id => id !== wordId));
   };
 
   // 4. Edit Word Handler
@@ -418,6 +428,8 @@ export const VocabManager: React.FC<VocabManagerProps> = ({
     const updated = [...units, newUnit];
     onSaveUnits(updated);
     setSelectedUnitId(newUnit.id);
+    setSelectedWordIds([]);
+    setMoveTargetUnitId('');
     setNewUnitTitle('');
   };
 
@@ -433,6 +445,8 @@ export const VocabManager: React.FC<VocabManagerProps> = ({
     const updated = units.filter(u => u.id !== unitId);
     onSaveUnits(updated);
     setSelectedUnitId(updated[0]?.id || '');
+    setSelectedWordIds([]);
+    setMoveTargetUnitId('');
   };
 
   // 6. JSON Export
@@ -457,6 +471,8 @@ export const VocabManager: React.FC<VocabManagerProps> = ({
           if (Array.isArray(parsed) && parsed.length > 0) {
             onSaveUnits(parsed);
             setSelectedUnitId(parsed[0].id);
+            setSelectedWordIds([]);
+            setMoveTargetUnitId('');
             alert('Vokabeln erfolgreich importiert!');
           }
         } catch {
@@ -469,6 +485,51 @@ export const VocabManager: React.FC<VocabManagerProps> = ({
   const stagedWords = currentUnit?.words.filter(word => word.isActive === false) ?? [];
   const activeWords = currentUnit?.words.filter(word => word.isActive !== false) ?? [];
   const totalWordsInUnit = currentUnit?.words.length ?? 0;
+  const otherUnits = units.filter(unit => unit.id !== currentUnit?.id);
+  const selectedMoveTargetId = otherUnits.some(unit => unit.id === moveTargetUnitId)
+    ? moveTargetUnitId
+    : otherUnits[0]?.id ?? '';
+
+  const handleToggleWordSelection = (wordId: string) => {
+    setSelectedWordIds(current =>
+      current.includes(wordId)
+        ? current.filter(id => id !== wordId)
+        : [...current, wordId]
+    );
+  };
+
+  const handleToggleAllWordSelection = () => {
+    if (selectedWordIds.length === totalWordsInUnit) {
+      setSelectedWordIds([]);
+      return;
+    }
+
+    setSelectedWordIds(currentUnit?.words.map(word => word.id) ?? []);
+  };
+
+  const handleMoveSelectedWords = () => {
+    if (!currentUnit || !selectedMoveTargetId || selectedWordIds.length === 0) return;
+
+    const targetUnit = units.find(unit => unit.id === selectedMoveTargetId);
+    if (!targetUnit || targetUnit.id === currentUnit.id) return;
+
+    const selectedIds = new Set(selectedWordIds);
+    const movedWords = currentUnit.words.filter(word => selectedIds.has(word.id));
+    if (movedWords.length === 0) return;
+
+    const updated = units.map(unit => {
+      if (unit.id === currentUnit.id) {
+        return { ...unit, words: unit.words.filter(word => !selectedIds.has(word.id)) };
+      }
+      if (unit.id === targetUnit.id) {
+        return { ...unit, words: [...unit.words, ...movedWords] };
+      }
+      return unit;
+    });
+
+    onSaveUnits(updated);
+    setSelectedWordIds([]);
+  };
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
@@ -552,7 +613,7 @@ export const VocabManager: React.FC<VocabManagerProps> = ({
                 </label>
                 <select
                   value={selectedUnitId}
-                  onChange={e => setSelectedUnitId(e.target.value)}
+                  onChange={e => handleSelectUnit(e.target.value)}
                   className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-medium"
                 >
                   {units.map(u => (
@@ -681,7 +742,7 @@ export const VocabManager: React.FC<VocabManagerProps> = ({
                 </label>
                 <select
                   value={selectedUnitId}
-                  onChange={e => setSelectedUnitId(e.target.value)}
+                  onChange={e => handleSelectUnit(e.target.value)}
                   className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-medium"
                 >
                   {units.map(u => (
@@ -819,7 +880,7 @@ export const VocabManager: React.FC<VocabManagerProps> = ({
                   <span className="text-2xl">{currentUnit?.icon}</span>
                   <select
                     value={selectedUnitId}
-                    onChange={e => setSelectedUnitId(e.target.value)}
+                    onChange={e => handleSelectUnit(e.target.value)}
                     className="p-2 bg-slate-50 border border-slate-300 rounded-xl font-bold text-slate-800"
                   >
                     {units.map(u => (
@@ -850,6 +911,56 @@ export const VocabManager: React.FC<VocabManagerProps> = ({
                 </span>
               </div>
 
+              {otherUnits.length > 0 && (
+                <div className="flex flex-col gap-3 rounded-2xl border border-indigo-200 bg-indigo-50 p-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={totalWordsInUnit > 0 && selectedWordIds.length === totalWordsInUnit}
+                      onChange={handleToggleAllWordSelection}
+                      aria-label="Alle Vokabeln dieser Unit auswählen"
+                      className="h-4 w-4 accent-indigo-600"
+                    />
+                    <span className="text-xs font-bold text-indigo-900">
+                      {selectedWordIds.length} von {totalWordsInUnit} ausgewählt
+                    </span>
+                    <button
+                      type="button"
+                      onClick={handleToggleAllWordSelection}
+                      disabled={totalWordsInUnit === 0}
+                      className="text-xs font-bold text-indigo-700 underline disabled:opacity-50"
+                    >
+                      {selectedWordIds.length === totalWordsInUnit && totalWordsInUnit > 0
+                        ? 'Auswahl aufheben'
+                        : 'Alle auswählen'}
+                    </button>
+                  </div>
+                  <div className="flex flex-col gap-2 sm:flex-row">
+                    <select
+                      value={selectedMoveTargetId}
+                      onChange={e => setMoveTargetUnitId(e.target.value)}
+                      aria-label="Ziel-Unit auswählen"
+                      className="rounded-xl border border-indigo-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700"
+                    >
+                      {otherUnits.map(unit => (
+                        <option key={unit.id} value={unit.id}>
+                          {unit.icon} {unit.title}
+                        </option>
+                      ))}
+                    </select>
+                    <button
+                      type="button"
+                      onClick={handleMoveSelectedWords}
+                      disabled={selectedWordIds.length === 0}
+                      className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-indigo-600 px-3 py-2 text-xs font-bold text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <ArrowRightLeft className="h-3.5 w-3.5" />
+                      {selectedWordIds.length === 1 ? 'Vokabel verschieben' : 'Auswahl verschieben'}
+                    </button>
+                  </div>
+                </div>
+              )}
+
               {/* Words list table */}
               <div className="space-y-4 max-h-96 overflow-y-auto pr-1">
                 {currentUnit?.words.length === 0 ? (
@@ -879,6 +990,13 @@ export const VocabManager: React.FC<VocabManagerProps> = ({
                           <div className="space-y-2">
                             {stagedWords.map(w => (
                               <div key={w.id} className="rounded-xl border border-amber-200 bg-white p-2.5 flex items-center justify-between gap-3">
+                                <input
+                                  type="checkbox"
+                                  checked={selectedWordIds.includes(w.id)}
+                                  onChange={() => handleToggleWordSelection(w.id)}
+                                  aria-label={`${w.en} auswählen`}
+                                  className="h-4 w-4 shrink-0 accent-indigo-600"
+                                />
                                 <div className="min-w-0 flex-1">
                                   <div className="font-extrabold text-slate-800 text-sm truncate">{w.en}</div>
                                   <div className="text-xs text-slate-500 truncate">{w.de}</div>
@@ -994,6 +1112,13 @@ export const VocabManager: React.FC<VocabManagerProps> = ({
                                       ))}
                                     </div>
                                     <div className="flex items-center gap-2 shrink-0">
+                                      <input
+                                        type="checkbox"
+                                        checked={selectedWordIds.includes(w.id)}
+                                        onChange={() => handleToggleWordSelection(w.id)}
+                                        aria-label={`${w.en} auswählen`}
+                                        className="h-4 w-4 accent-indigo-600"
+                                      />
                                       <div className="text-[10px] font-bold px-2 py-1 rounded-full bg-indigo-100 text-indigo-700 whitespace-nowrap">
                                         Kasten-Fach {w.box || 1}
                                       </div>
@@ -1126,6 +1251,8 @@ export const VocabManager: React.FC<VocabManagerProps> = ({
                 if (confirm('Möchtest du wirklich alle Einheiten löschen und ganz neu anfangen?')) {
                   onSaveUnits([]);
                   setSelectedUnitId('');
+                  setSelectedWordIds([]);
+                  setMoveTargetUnitId('');
                   alert('Alle Einheiten wurden gelöscht.');
                 }
               }}
